@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Habify — Log In or Create Account</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- Minimal Auth Header -->
+  <header class="site-navbar">
+    <div class="container nav-flex">
+      <a href="index.html" class="brand-link">
+        <div class="brand-flame">⚡</div>
+        <span>Habify</span>
+      </a>
+      <a href="index.html" class="btn btn-ghost" style="font-size: 0.88rem;">← Back to Home</a>
+    </div>
+  </header>
+
+  <!-- Auth Card Container -->
+  <div class="auth-page-container">
+    <div class="auth-box">
+      <div class="auth-header">
+        <h1 id="auth-main-title">Welcome to Habify</h1>
+        <p id="auth-main-subtitle">Build discipline, track habits, and view measurable progress</p>
+      </div>
+
+      <!-- Auth Switcher Tabs -->
+      <div class="auth-tabs">
+        <button id="tab-login" class="auth-tab-btn active" onclick="switchAuthMode('login')">Log In</button>
+        <button id="tab-register" class="auth-tab-btn" onclick="switchAuthMode('register')">Create Account</button>
+      </div>
+
+      <!-- LOGIN FORM -->
+      <form id="form-login" onsubmit="submitLogin(event)">
+        <div class="form-group">
+          <label class="form-label" for="login-identifier">Email or Username</label>
+          <input type="text" id="login-identifier" class="form-control" placeholder="e.g. alex@example.com or alex_bca" required autofocus>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="login-pass">Password</label>
+          <input type="password" id="login-pass" class="form-control" placeholder="••••••••" required>
+        </div>
+
+        <button type="submit" id="btn-login-action" class="btn btn-primary" style="width: 100%; margin-top: 10px;">
+          Log In to Workspace
+        </button>
+      </form>
+
+      <!-- REGISTRATION FORM -->
+      <form id="form-register" onsubmit="submitRegister(event)" style="display: none;">
+        <div class="form-group">
+          <label class="form-label" for="reg-name">Full Name</label>
+          <input type="text" id="reg-name" class="form-control" placeholder="Alex Morgan" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="reg-mail">Email Address</label>
+          <input type="email" id="reg-mail" class="form-control" placeholder="alex@example.com" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="reg-user">Username</label>
+          <input type="text" id="reg-user" class="form-control" placeholder="alex_bca" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="reg-pass">Password (min. 6 characters)</label>
+          <input type="password" id="reg-pass" class="form-control" placeholder="••••••••" minlength="6" required>
+        </div>
+
+        <button type="submit" id="btn-reg-action" class="btn btn-primary" style="width: 100%; margin-top: 10px;">
+          Create Free Account
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script>
+    // Redirect immediately to dashboard if user is already authenticated
+    if (API.isAuthenticated()) {
+      window.location.href = 'dashboard.html';
+    }
+
+    function switchAuthMode(mode) {
+      const loginForm = document.getElementById('form-login');
+      const registerForm = document.getElementById('form-register');
+      const tabLogin = document.getElementById('tab-login');
+      const tabRegister = document.getElementById('tab-register');
+      const title = document.getElementById('auth-main-title');
+      const sub = document.getElementById('auth-main-subtitle');
+
+      if (mode === 'login') {
+        loginForm.style.display = 'block';
+        registerForm.style.display = 'none';
+        tabLogin.classList.add('active');
+        tabRegister.classList.remove('active');
+        title.textContent = 'Welcome Back';
+        sub.textContent = 'Log in to access your daily habits and streak analytics';
+        window.location.hash = 'login';
+      } else {
+        loginForm.style.display = 'none';
+        registerForm.style.display = 'block';
+        tabLogin.classList.remove('active');
+        tabRegister.classList.add('active');
+        title.textContent = 'Create Your Account';
+        sub.textContent = 'Start tracking consistency and turn progress into measurable feedback';
+        window.location.hash = 'register';
+      }
+    }
+
+    // Check URL Hash on load
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.location.hash === '#register') {
+        switchAuthMode('register');
+      } else {
+        switchAuthMode('login');
+      }
+    });
+
+    async function submitLogin(e) {
+      e.preventDefault();
+      const loginId = document.getElementById('login-identifier').value.trim();
+      const pass = document.getElementById('login-pass').value;
+      const btn = document.getElementById('btn-login-action');
+
+      try {
+        btn.disabled = true;
+        btn.textContent = 'Authenticating...';
+        const response = await API.auth.login(loginId, pass);
+        API.setSession(response);
+        API.showToast('Login successful! Welcome back.', 'success');
+        setTimeout(() => window.location.href = 'dashboard.html', 300);
+      } catch (err) {
+        API.showToast(err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Log In to Workspace';
+      }
+    }
+
+    async function submitRegister(e) {
+      e.preventDefault();
+      const fullName = document.getElementById('reg-name').value.trim();
+      const email = document.getElementById('reg-mail').value.trim();
+      const username = document.getElementById('reg-user').value.trim();
+      const pass = document.getElementById('reg-pass').value;
+      const btn = document.getElementById('btn-reg-action');
+
+      try {
+        btn.disabled = true;
+        btn.textContent = 'Creating account...';
+        const response = await API.auth.register(fullName, email, username, pass);
+        API.setSession(response);
+        API.showToast('Account created successfully! Welcome to Habify.', 'success');
+        setTimeout(() => window.location.href = 'dashboard.html', 300);
+      } catch (err) {
+        API.showToast(err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Create Free Account';
+      }
+    }
+  </script>
+</body>
+</html>

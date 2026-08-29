@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Habify — Build Consistency. Make Progress Visible.</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- Public Navigation Header -->
+  <header class="site-navbar">
+    <div class="container nav-flex">
+      <a href="index.html" class="brand-link">
+        <div class="brand-flame">⚡</div>
+        <span>Habify</span>
+      </a>
+
+      <nav class="nav-menu">
+        <a href="#features" class="nav-link">Features</a>
+        <a href="#how-it-works" class="nav-link">How It Works</a>
+        <a href="#preview" class="nav-link">Preview</a>
+      </nav>
+
+      <div class="nav-actions" id="public-nav-actions">
+        <a href="auth.html#login" class="btn btn-ghost">Log In</a>
+        <a href="auth.html#register" class="btn btn-primary">Get Started</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero-section">
+    <div class="container">
+      <div class="hero-pill-badge">
+        <span>✨ Personal Discipline & Productivity Analytics</span>
+      </div>
+
+      <h1 class="hero-title">
+        Build consistency.<br>
+        <span class="gradient-word">Make progress visible.</span>
+      </h1>
+
+      <p class="hero-subtitle">
+        Track your daily habits, understand your consistency, and turn your daily routines into measurable momentum you can actually see.
+      </p>
+
+      <div class="hero-cta-group">
+        <a href="auth.html#register" class="btn btn-primary btn-lg">Get Started Free</a>
+        <a href="#how-it-works" class="btn btn-secondary btn-lg">See How It Works</a>
+      </div>
+
+      <!-- Conceptual Mock Dashboard Preview -->
+      <div class="mock-dashboard-container" id="preview">
+        <div class="mock-window-header">
+          <div class="window-dots">
+            <div class="window-dot dot-red"></div>
+            <div class="window-dot dot-yellow"></div>
+            <div class="window-dot dot-green"></div>
+          </div>
+          <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">habify.app/workspace — Live Preview</span>
+          <span class="badge badge-completed">● Live Demo Mode</span>
+        </div>
+
+        <!-- Mock KPI Row -->
+        <div class="mock-kpi-row">
+          <div class="mock-kpi-card">
+            <div class="mock-kpi-label">Discipline Score</div>
+            <div class="mock-kpi-val" style="color: #fb923c;">88 / 100</div>
+            <div style="font-size: 0.76rem; color: var(--text-muted); margin-top: 2px;">7-Day Rolling Consistency</div>
+          </div>
+
+          <div class="mock-kpi-card">
+            <div class="mock-kpi-label">Today's Progress</div>
+            <div class="mock-kpi-val" style="color: var(--status-completed);">83%</div>
+            <div style="font-size: 0.76rem; color: var(--text-muted); margin-top: 2px;">5 of 6 habits completed</div>
+          </div>
+
+          <div class="mock-kpi-card">
+            <div class="mock-kpi-label">Active Streak</div>
+            <div class="mock-kpi-val" style="color: #f97316;">🔥 12 Days</div>
+            <div style="font-size: 0.76rem; color: var(--text-muted); margin-top: 2px;">Personal best momentum</div>
+          </div>
+
+          <div class="mock-kpi-card">
+            <div class="mock-kpi-label">Weekly Trend</div>
+            <div class="mock-kpi-val" style="color: var(--accent-blue);">+14%</div>
+            <div style="font-size: 0.76rem; color: var(--text-muted); margin-top: 2px;">Compared to last week</div>
+          </div>
+        </div>
+
+        <!-- Mock Checklist Sample -->
+        <div class="mock-tracker-sample">
+          <div class="mock-habit-row">
+            <div>
+              <strong style="color: #ffffff; font-size: 0.95rem;">Morning Meditation & Mindfulness</strong>
+              <div style="font-size: 0.78rem; color: var(--text-secondary);">Health &bull; 20 mins &bull; 🌅 Morning</div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <span class="streak-indicator">🔥 12d</span>
+              <span class="badge badge-completed">✓ Completed (100%)</span>
+            </div>
+          </div>
+
+          <div class="mock-habit-row" style="border-left-color: var(--status-completed);">
+            <div>
+              <strong style="color: #ffffff; font-size: 0.95rem;">Study Java Core & Spring Boot Architecture</strong>
+              <div style="font-size: 0.78rem; color: var(--text-secondary);">Study &bull; 2 hours &bull; ☀️ Afternoon</div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <span class="streak-indicator">🔥 9d</span>
+              <span class="badge badge-completed">✓ Completed (100%)</span>
+            </div>
+          </div>
+
+          <div class="mock-habit-row" style="border-left-color: var(--status-partial);">
+            <div>
+              <strong style="color: #ffffff; font-size: 0.95rem;">Gym Strength Training & Cardio</strong>
+              <div style="font-size: 0.78rem; color: var(--text-secondary);">Fitness &bull; 45 mins &bull; 🌆 Evening</div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <span class="streak-indicator">🔥 5d</span>
+              <span class="badge badge-partial">◐ Partial (75%)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section class="section-padding" id="features" style="background: var(--bg-surface); border-top: 1px solid var(--border-subtle); border-bottom: 1px solid var(--border-subtle);">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-tag">Core Features</div>
+        <h2 class="section-title">Designed for Long-Term Consistency</h2>
+        <p>Habify turns raw habit tracking into actionable clarity, motivation, and discipline analytics.</p>
+      </div>
+
+      <div class="features-grid">
+        <!-- Feature 1 -->
+        <div class="feature-card">
+          <div class="feature-icon-box">📅</div>
+          <h3 class="feature-title">Smart Habit Scheduling</h3>
+          <p class="feature-desc">
+            Define habits that match your real lifestyle. Set routines to run daily or on designated days of the week (e.g. Mon, Wed, Fri).
+          </p>
+        </div>
+
+        <!-- Feature 2 -->
+        <div class="feature-card">
+          <div class="feature-icon-box">🔥</div>
+          <h3 class="feature-title">Rest-Day Aware Streaks</h3>
+          <p class="feature-desc">
+            Rest days shouldn't break your momentum. Habify's frequency-aware streak engine ensures non-scheduled days protect your hard-earned streak.
+          </p>
+        </div>
+
+        <!-- Feature 3 -->
+        <div class="feature-card">
+          <div class="feature-icon-box">📊</div>
+          <h3 class="feature-title">Rolling Discipline Score</h3>
+          <p class="feature-desc">
+            Measure your real consistency with a 7-day rolling score ($0-100$). Partial efforts are rewarded, and missed scheduled days offer constructive feedback.
+          </p>
+        </div>
+
+        <!-- Feature 4 -->
+        <div class="feature-card">
+          <div class="feature-icon-box">📈</div>
+          <h3 class="feature-title">Day-by-Day Visualizer</h3>
+          <p class="feature-desc">
+            Inspect your weekly consistency at a glance with clean day-by-day bar charts showing completion percentages and scheduled routines.
+          </p>
+        </div>
+
+        <!-- Feature 5 -->
+        <div class="feature-card">
+          <div class="feature-icon-box">⚡</div>
+          <h3 class="feature-title">1-Click Fast Tracking</h3>
+          <p class="feature-desc">
+            Zero friction daily logging. Mark habits as Complete (100%), Partial (with a custom % and note), or Missed with a single touch.
+          </p>
+        </div>
+
+        <!-- Feature 6 -->
+        <div class="feature-card">
+          <div class="feature-icon-box">🎯</div>
+          <h3 class="feature-title">Clear Routine Management</h3>
+          <p class="feature-desc">
+            Organize habits by categories (Study, Coding, Fitness, Reading, Health, Finance). Pause or resume habits anytime without losing historical logs.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- How It Works Section -->
+  <section class="section-padding" id="how-it-works">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-tag">The Workflow</div>
+        <h2 class="section-title">How Habify Powers Your Daily Habits</h2>
+        <p>A structured, frictionless framework to build and sustain discipline.</p>
+      </div>
+
+      <div class="process-steps-row">
+        <div class="process-step-item">
+          <div class="step-num-badge">1</div>
+          <h3 class="step-title">Create Habits</h3>
+          <p class="step-desc">Define your target activities, categories, priorities, and frequency schedules.</p>
+        </div>
+
+        <div class="process-step-item">
+          <div class="step-num-badge">2</div>
+          <h3 class="step-title">Track Daily</h3>
+          <p class="step-desc">Check in each day and record completed, partial, or missed scheduled routines.</p>
+        </div>
+
+        <div class="process-step-item">
+          <div class="step-num-badge">3</div>
+          <h3 class="step-title">Build Streaks</h3>
+          <p class="step-desc">Maintain consecutive completion momentum with intelligent rest-day tolerance.</p>
+        </div>
+
+        <div class="process-step-item">
+          <div class="step-num-badge">4</div>
+          <h3 class="step-title">Analyze Progress</h3>
+          <p class="step-desc">Watch your 7-day rolling discipline score and weekly visualizer adjust dynamically.</p>
+        </div>
+
+        <div class="process-step-item">
+          <div class="step-num-badge">5</div>
+          <h3 class="step-title">Grow & Improve</h3>
+          <p class="step-desc">Identify strengths, eliminate weak spots, and sustain habits that last a lifetime.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Call to Action Banner -->
+  <section class="container">
+    <div class="cta-banner">
+      <h2>Ready to build better consistency?</h2>
+      <p>Start turning your daily routines into visible, measurable progress today with Habify.</p>
+      <a href="auth.html#register" class="btn btn-primary btn-lg">Get Started Free</a>
+    </div>
+  </section>
+
+  <!-- Public Footer -->
+  <footer class="site-footer">
+    <div class="container">
+      <p style="color: #ffffff; font-weight: 700; margin-bottom: 6px;">⚡ Habify — Personal Discipline & Productivity Analytics System</p>
+      <p>Developed with Java, Spring Boot, Spring Data JPA, and Modern Web Architecture.</p>
+    </div>
+  </footer>
+
+  <script src="js/api.js"></script>
+  <script>
+    // If the visitor is already logged in, update navbar actions gracefully
+    document.addEventListener('DOMContentLoaded', () => {
+      if (API.isAuthenticated()) {
+        const user = API.getStoredUser();
+        const actionsEl = document.getElementById('public-nav-actions');
+        if (actionsEl && user) {
+          actionsEl.innerHTML = `
+            <a href="dashboard.html" class="btn btn-primary">Go to Dashboard →</a>
+          `;
+        }
+      }
+    });
+  </script>
+</body>
+</html>
