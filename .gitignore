@@ -1,0 +1,26 @@
+# Target build directory
+/target/
+*.class
+*.jar
+*.war
+*.ear
+
+# IDE Files
+.vscode/
+.idea/
+*.iml
+.classpath
+.project
+.settings/
+
+# Log & Temporary Files
+*.log
+*.tmp
+*.swp
+*.bak
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Maven
+.mvn/timing.properties
