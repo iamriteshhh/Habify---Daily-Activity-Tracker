@@ -1,4 +1,4 @@
-target/
+/target/
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
@@ -27,6 +27,24 @@ target/
 
 ### VS Code ###
 .vscode/
+
+### Build artifacts & language outputs ###
+*.class
+*.jar
+*.war
+*.ear
+
+### Log & Temporary Files ###
+*.log
+*.tmp
+*.swp
+*.bak
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+### Maven ###
+.mvn/timing.properties
 
 ### Secrets & Local Environment ###
 .env
