@@ -8,17 +8,19 @@ public class AuthResponse {
     private String username;
     private String token;
     private String message;
+    private Boolean emailVerified;
 
     public AuthResponse() {
     }
 
-    public AuthResponse(Long userId, String fullName, String email, String username, String token, String message) {
+    public AuthResponse(Long userId, String fullName, String email, String username, String token, String message, Boolean emailVerified) {
         this.userId = userId;
         this.fullName = fullName;
         this.email = email;
         this.username = username;
         this.token = token;
         this.message = message;
+        this.emailVerified = emailVerified;
     }
 
     public Long getUserId() {
@@ -67,5 +69,13 @@ public class AuthResponse {
 
     public void setMessage(String message) {
         this.message = message;
+    }
+
+    public Boolean getEmailVerified() {
+        return emailVerified;
+    }
+
+    public void setEmailVerified(Boolean emailVerified) {
+        this.emailVerified = emailVerified;
     }
 }

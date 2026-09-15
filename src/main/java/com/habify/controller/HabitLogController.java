@@ -11,6 +11,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import org.springframework.format.annotation.DateTimeFormat;
+import java.time.LocalDate;
 import java.util.List;
 
 /**
@@ -52,5 +54,15 @@ public class HabitLogController {
         Long userId = authHelper.getAuthenticatedUserId(request);
         List<TodayHabitDTO> todayHabits = habitLogService.getTodayHabits(userId);
         return ResponseEntity.ok(todayHabits);
+    }
+
+    @GetMapping("/logs/range")
+    public ResponseEntity<List<HabitLogResponse>> getLogsByRange(
+            @RequestParam("startDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam("endDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            HttpServletRequest request) {
+        Long userId = authHelper.getAuthenticatedUserId(request);
+        List<HabitLogResponse> logs = habitLogService.getLogsByDateRange(userId, startDate, endDate);
+        return ResponseEntity.ok(logs);
     }
 }

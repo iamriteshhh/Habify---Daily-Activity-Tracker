@@ -36,11 +36,17 @@ class UserServiceTest {
     @Mock
     private PasswordEncoder passwordEncoder;
 
+    @Mock
+    private com.habify.security.JwtUtil jwtUtil;
+
+    @Mock
+    private MailService mailService;
+
     private UserService userService;
 
     @BeforeEach
     void setUp() {
-        userService = new UserService(userRepository, habitRepository, passwordEncoder);
+        userService = new UserService(userRepository, habitRepository, passwordEncoder, jwtUtil, mailService);
     }
 
     @Test
@@ -56,13 +62,14 @@ class UserServiceTest {
         savedUser.setId(10L);
 
         when(userRepository.save(any(User.class))).thenReturn(savedUser);
+        when(jwtUtil.generateToken(10L, "pooja_v", "pooja@bca.edu")).thenReturn("jwt.signed.token");
 
         AuthResponse response = userService.register(request);
 
         assertNotNull(response);
         assertEquals(10L, response.getUserId());
         assertEquals("pooja@bca.edu", response.getEmail());
-        assertTrue(response.getToken().startsWith("hbf_10_"));
+        assertEquals("jwt.signed.token", response.getToken());
     }
 
     @Test
@@ -85,12 +92,14 @@ class UserServiceTest {
 
         when(userRepository.findByEmailOrUsername("pooja_v", "pooja_v")).thenReturn(Optional.of(user));
         when(passwordEncoder.matches("password123", "hashedPassword")).thenReturn(true);
+        when(jwtUtil.generateToken(10L, "pooja_v", "pooja@bca.edu")).thenReturn("jwt.signed.token");
 
         AuthResponse response = userService.login(request);
 
         assertNotNull(response);
         assertEquals(10L, response.getUserId());
         assertEquals("pooja_v", response.getUsername());
+        assertEquals("jwt.signed.token", response.getToken());
     }
 
     @Test

@@ -45,4 +45,7 @@ public interface HabitLogRepository extends JpaRepository<HabitLog, Long> {
 
     @Query("SELECT l FROM HabitLog l WHERE l.habit.id = :habitId AND l.logDate <= :date ORDER BY l.logDate DESC")
     List<HabitLog> findPastLogsByHabitId(@Param("habitId") Long habitId, @Param("date") LocalDate date);
+
+    @Query("SELECT COUNT(l) FROM HabitLog l WHERE l.habit.user.id = :userId AND l.status = :status")
+    long countByUserIdAndStatus(@Param("userId") Long userId, @Param("status") HabitStatus status);
 }

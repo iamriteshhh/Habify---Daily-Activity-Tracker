@@ -1,51 +1,44 @@
 package com.habify.config;
 
 import com.habify.exception.UnauthorizedException;
+import com.habify.security.UserPrincipal;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 /**
  * AuthHelper
  * 
- * Simple, student-friendly authentication helper.
- * Resolves the authenticated User ID from either the 'X-User-Id' header
- * or the 'Authorization: Bearer hbf_<userId>_<token>' header.
+ * Secure identity resolver for Habify.
+ * Resolves the authenticated User ID exclusively from the verified
+ * Spring Security Context populated by the JWT filter.
+ * 
+ * Client-supplied headers (X-User-Id) and query parameters (?userId=)
+ * are strictly forbidden and ignored to prevent user impersonation.
  */
 @Component
 public class AuthHelper {
 
     public Long getAuthenticatedUserId(HttpServletRequest request) {
-        // 1. Check custom X-User-Id header
-        String xUserId = request.getHeader("X-User-Id");
-        if (xUserId != null && !xUserId.trim().isEmpty()) {
-            try {
-                return Long.parseLong(xUserId.trim());
-            } catch (NumberFormatException ignored) {
-            }
+        return getAuthenticatedUserId();
+    }
+
+    public Long getAuthenticatedUserId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication != null && authentication.isAuthenticated() && authentication.getPrincipal() instanceof UserPrincipal principal) {
+            return principal.getId();
         }
 
-        // 2. Check Authorization Bearer token (format: hbf_{userId}_{uuid})
-        String authHeader = request.getHeader("Authorization");
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            String token = authHeader.substring(7).trim();
-            if (token.startsWith("hbf_")) {
-                String[] parts = token.split("_");
-                if (parts.length >= 2) {
-                    try {
-                        return Long.parseLong(parts[1]);
-                    } catch (NumberFormatException ignored) {
-                    }
-                }
-            }
-        }
+        throw new UnauthorizedException("Authentication required. Please log in.");
+    }
 
-        // 3. Fallback to query parameter ?userId=
-        String paramUserId = request.getParameter("userId");
-        if (paramUserId != null && !paramUserId.trim().isEmpty()) {
-            try {
-                return Long.parseLong(paramUserId.trim());
-            } catch (NumberFormatException ignored) {
-            }
+    public UserPrincipal getAuthenticatedPrincipal() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication != null && authentication.isAuthenticated() && authentication.getPrincipal() instanceof UserPrincipal principal) {
+            return principal;
         }
 
         throw new UnauthorizedException("Authentication required. Please log in.");

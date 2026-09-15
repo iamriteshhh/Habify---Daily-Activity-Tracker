@@ -10,18 +10,20 @@ public class UserProfileResponse {
     private String username;
     private long totalHabits;
     private long activeHabits;
+    private Boolean emailVerified;
     private LocalDateTime createdAt;
 
     public UserProfileResponse() {
     }
 
-    public UserProfileResponse(Long id, String fullName, String email, String username, long totalHabits, long activeHabits, LocalDateTime createdAt) {
+    public UserProfileResponse(Long id, String fullName, String email, String username, long totalHabits, long activeHabits, Boolean emailVerified, LocalDateTime createdAt) {
         this.id = id;
         this.fullName = fullName;
         this.email = email;
         this.username = username;
         this.totalHabits = totalHabits;
         this.activeHabits = activeHabits;
+        this.emailVerified = emailVerified;
         this.createdAt = createdAt;
     }
 
@@ -71,6 +73,14 @@ public class UserProfileResponse {
 
     public void setActiveHabits(long activeHabits) {
         this.activeHabits = activeHabits;
+    }
+
+    public Boolean getEmailVerified() {
+        return emailVerified;
+    }
+
+    public void setEmailVerified(Boolean emailVerified) {
+        this.emailVerified = emailVerified;
     }
 
     public LocalDateTime getCreatedAt() {

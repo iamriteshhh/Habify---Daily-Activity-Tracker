@@ -16,8 +16,53 @@ public class DashboardSummaryResponse {
     private int bestCurrentStreak;
     private List<DailyProgressDTO> weeklyProgress;
     private List<TodayHabitDTO> todayHabits;
+    private List<CategoryProgressDTO> categoryDistribution;
+    private List<InsightDTO> insights;
+    private String bestDay;
+    private String weakestDay;
+    private int weeklyAveragePercentage;
 
     public DashboardSummaryResponse() {
+    }
+
+    public List<CategoryProgressDTO> getCategoryDistribution() {
+        return categoryDistribution;
+    }
+
+    public void setCategoryDistribution(List<CategoryProgressDTO> categoryDistribution) {
+        this.categoryDistribution = categoryDistribution;
+    }
+
+    public List<InsightDTO> getInsights() {
+        return insights;
+    }
+
+    public void setInsights(List<InsightDTO> insights) {
+        this.insights = insights;
+    }
+
+    public String getBestDay() {
+        return bestDay;
+    }
+
+    public void setBestDay(String bestDay) {
+        this.bestDay = bestDay;
+    }
+
+    public String getWeakestDay() {
+        return weakestDay;
+    }
+
+    public void setWeakestDay(String weakestDay) {
+        this.weakestDay = weakestDay;
+    }
+
+    public int getWeeklyAveragePercentage() {
+        return weeklyAveragePercentage;
+    }
+
+    public void setWeeklyAveragePercentage(int weeklyAveragePercentage) {
+        this.weeklyAveragePercentage = weeklyAveragePercentage;
     }
 
     public LocalDate getTodayDate() {

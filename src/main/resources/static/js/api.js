@@ -1,8 +1,84 @@
 /**
- * Habify API Client & Session Manager
+ * Habify - API Client, Session Manager & Guest Storage Engine
  */
 const API = (() => {
   const BASE_URL = '/api';
+  const GUEST_HABITS_KEY = 'habify_guest_habits';
+  const GUEST_LOGS_KEY = 'habify_guest_logs';
+
+  // Starter demo habits for instant frictionless guest onboarding
+  const DEFAULT_STARTER_HABITS = [
+    {
+      id: 101,
+      title: 'Java Programming & Spring Boot',
+      description: 'Practice core Java, concurrency, and REST endpoints',
+      category: 'Coding',
+      priority: 'HIGH',
+      frequencyType: 'DAILY',
+      scheduledDays: null,
+      targetValue: 2,
+      unit: 'hours',
+      preferredTime: 'AFTERNOON',
+      isActive: true,
+      createdAt: '2026-08-01'
+    },
+    {
+      id: 102,
+      title: 'Gym Strength & Cardio',
+      description: 'Compound lifts and high-intensity interval training',
+      category: 'Fitness',
+      priority: 'HIGH',
+      frequencyType: 'DAILY',
+      scheduledDays: null,
+      targetValue: 45,
+      unit: 'mins',
+      preferredTime: 'EVENING',
+      isActive: true,
+      createdAt: '2026-08-01'
+    },
+    {
+      id: 103,
+      title: 'Morning Yoga & Meditation',
+      description: 'Breathwork, flexibility, and mindfulness',
+      category: 'Health',
+      priority: 'MEDIUM',
+      frequencyType: 'DAILY',
+      scheduledDays: null,
+      targetValue: 20,
+      unit: 'mins',
+      preferredTime: 'MORNING',
+      isActive: true,
+      createdAt: '2026-08-01'
+    },
+    {
+      id: 104,
+      title: 'Data Structures & Algorithms',
+      description: 'Solve 2 LeetCode problems and review complexity',
+      category: 'Study',
+      priority: 'HIGH',
+      frequencyType: 'DAILY',
+      scheduledDays: null,
+      targetValue: 1,
+      unit: 'session',
+      preferredTime: 'MORNING',
+      isActive: true,
+      createdAt: '2026-08-01'
+    },
+    {
+      id: 105,
+      title: 'Read Non-Fiction / Tech Books',
+      description: 'Read Clean Architecture & Atomic Habits',
+      category: 'Reading',
+      priority: 'MEDIUM',
+      frequencyType: 'DAILY',
+      scheduledDays: null,
+      targetValue: 25,
+      unit: 'pages',
+      preferredTime: 'EVENING',
+      isActive: true,
+      createdAt: '2026-08-01'
+    }
+  ];
 
   function getStoredUser() {
     try {
@@ -91,20 +167,153 @@ const API = (() => {
     const toast = document.createElement('div');
     toast.className = `toast-msg toast-${type}`;
     
-    let icon = 'ℹ️';
-    if (type === 'success') icon = '✅';
-    if (type === 'error') icon = '⚠️';
+    let icon = '⚡';
+    if (type === 'success') icon = '✓';
+    if (type === 'error') icon = '×';
+    if (type === 'info') icon = 'ℹ️';
 
-    toast.innerHTML = `<span>${icon}</span> <span>${message}</span>`;
+    toast.innerHTML = `<span style="font-weight:800; font-size:1.1rem; color:var(--yellow-accent);">${icon}</span> <span>${message}</span>`;
     container.appendChild(toast);
 
     setTimeout(() => {
       toast.style.opacity = '0';
-      toast.style.transform = 'translateX(100%)';
-      toast.style.transition = 'all 0.3s ease';
-      setTimeout(() => toast.remove(), 300);
-    }, 4000);
+      toast.style.transform = 'translateY(12px) scale(0.95)';
+      toast.style.transition = 'all 0.25s ease';
+      setTimeout(() => toast.remove(), 250);
+    }, 3200);
   }
+
+  /* ==========================================================================
+     GUEST STORAGE ENGINE (Offline-First / Zero Friction Tracking)
+     ========================================================================== */
+  const guestStorage = {
+    getHabits() {
+      try {
+        const raw = localStorage.getItem(GUEST_HABITS_KEY);
+        if (!raw) {
+          localStorage.setItem(GUEST_HABITS_KEY, JSON.stringify(DEFAULT_STARTER_HABITS));
+          return [...DEFAULT_STARTER_HABITS];
+        }
+        return JSON.parse(raw);
+      } catch (e) {
+        return [...DEFAULT_STARTER_HABITS];
+      }
+    },
+
+    saveHabits(habits) {
+      localStorage.setItem(GUEST_HABITS_KEY, JSON.stringify(habits));
+    },
+
+    createHabit(habitData) {
+      const habits = guestStorage.getHabits();
+      const newHabit = {
+        ...habitData,
+        id: Date.now(),
+        isActive: true,
+        createdAt: new Date().toISOString().split('T')[0]
+      };
+      habits.push(newHabit);
+      guestStorage.saveHabits(habits);
+      return newHabit;
+    },
+
+    updateHabit(id, habitData) {
+      const habits = guestStorage.getHabits();
+      const idx = habits.findIndex(h => h.id === Number(id));
+      if (idx !== -1) {
+        habits[idx] = { ...habits[idx], ...habitData };
+        guestStorage.saveHabits(habits);
+        return habits[idx];
+      }
+      throw new Error('Habit not found in local storage');
+    },
+
+    deleteHabit(id) {
+      let habits = guestStorage.getHabits();
+      habits = habits.filter(h => h.id !== Number(id));
+      guestStorage.saveHabits(habits);
+    },
+
+    toggleHabitActive(id) {
+      const habits = guestStorage.getHabits();
+      const habit = habits.find(h => h.id === Number(id));
+      if (habit) {
+        habit.isActive = !habit.isActive;
+        guestStorage.saveHabits(habits);
+        return habit;
+      }
+    },
+
+    getLogs() {
+      try {
+        const raw = localStorage.getItem(GUEST_LOGS_KEY);
+        if (!raw) {
+          // Pre-populate sample week logs to illustrate the tracker immediately
+          const initialLogs = {};
+          const today = new Date();
+          
+          // Seed some past days in the current week
+          const habits = guestStorage.getHabits();
+          habits.forEach((h, hIdx) => {
+            for (let d = 0; d < 7; d++) {
+              const dt = new Date(today);
+              const dayOfWeek = (dt.getDay() + 6) % 7; // Monday=0
+              dt.setDate(dt.getDate() - (dayOfWeek - d));
+              const dateKey = dt.toISOString().split('T')[0];
+              const logKey = `${h.id}_${dateKey}`;
+
+              // Seed natural realistic patterns for days up to today
+              if (d < dayOfWeek) {
+                if ((hIdx + d) % 3 === 0) {
+                  initialLogs[logKey] = { habitId: h.id, logDate: dateKey, status: 'COMPLETED', completionPercentage: 100 };
+                } else if ((hIdx + d) % 3 === 1) {
+                  initialLogs[logKey] = { habitId: h.id, logDate: dateKey, status: 'COMPLETED', completionPercentage: 100 };
+                } else {
+                  initialLogs[logKey] = { habitId: h.id, logDate: dateKey, status: 'PARTIAL', completionPercentage: 60 };
+                }
+              } else if (d === dayOfWeek) {
+                // Today default
+                if (hIdx % 2 === 0) {
+                  initialLogs[logKey] = { habitId: h.id, logDate: dateKey, status: 'COMPLETED', completionPercentage: 100 };
+                }
+              }
+            }
+          });
+
+          localStorage.setItem(GUEST_LOGS_KEY, JSON.stringify(initialLogs));
+          return initialLogs;
+        }
+        return JSON.parse(raw);
+      } catch (e) {
+        return {};
+      }
+    },
+
+    saveLogs(logs) {
+      localStorage.setItem(GUEST_LOGS_KEY, JSON.stringify(logs));
+    },
+
+    logHabit(habitId, logData) {
+      const logs = guestStorage.getLogs();
+      const dateKey = logData.logDate || new Date().toISOString().split('T')[0];
+      const key = `${habitId}_${dateKey}`;
+
+      if (logData.status === 'NOT_COMPLETED' || logData.status === 'PENDING' || !logData.status) {
+        delete logs[key];
+      } else {
+        logs[key] = {
+          habitId: Number(habitId),
+          logDate: dateKey,
+          status: logData.status,
+          completionPercentage: logData.completionPercentage || (logData.status === 'COMPLETED' ? 100 : (logData.status === 'MISSED' ? 0 : 50)),
+          note: logData.note || null
+        };
+      }
+
+      guestStorage.saveLogs(logs);
+      return logs[key] || null;
+    }
+  };
 
   return {
     getStoredUser,
@@ -113,6 +322,7 @@ const API = (() => {
     isAuthenticated,
     requireAuth,
     showToast,
+    guestStorage,
 
     auth: {
       register: (fullName, email, username, password) =>
@@ -124,6 +334,17 @@ const API = (() => {
         request('/auth/login', {
           method: 'POST',
           body: JSON.stringify({ emailOrUsername, password })
+        }),
+      verifyEmail: (token) => request(`/auth/verify-email?token=${encodeURIComponent(token)}`),
+      forgotPassword: (email) =>
+        request('/auth/forgot-password', {
+          method: 'POST',
+          body: JSON.stringify({ email })
+        }),
+      resetPassword: (token, newPassword) =>
+        request('/auth/reset-password', {
+          method: 'POST',
+          body: JSON.stringify({ token, newPassword })
         }),
       getProfile: () => request('/auth/profile')
     },
@@ -158,12 +379,46 @@ const API = (() => {
           body: JSON.stringify(logData)
         }),
       getToday: () => request('/logs/today'),
+      getRange: (startDate, endDate) => request(`/logs/range?startDate=${startDate}&endDate=${endDate}`),
       getHistory: (habitId) => request(`/habits/${habitId}/logs`)
     },
 
     analytics: {
       getDashboard: () => request('/analytics/dashboard'),
       getStreak: (habitId) => request(`/analytics/habits/${habitId}/streak`)
+    },
+
+    goals: {
+      getAll: () => request('/goals'),
+      create: (goalData) =>
+        request('/goals', {
+          method: 'POST',
+          body: JSON.stringify(goalData)
+        }),
+      increment: (id, amount = 1) =>
+        request(`/goals/${id}/increment?amount=${amount}`, {
+          method: 'PATCH'
+        }),
+      delete: (id) =>
+        request(`/goals/${id}`, {
+          method: 'DELETE'
+        })
+    },
+
+    achievements: {
+      getAll: () => request('/achievements')
+    },
+
+    calendar: {
+      getMonth: (year, month) => request(`/calendar/month?year=${year}&month=${month}`),
+      getDay: (dateStr) => request(`/calendar/day?date=${dateStr}`)
+    },
+
+    reports: {
+      getSummary: (type = 'WEEKLY', date = '') =>
+        request(`/reports/summary?type=${type}${date ? `&date=${date}` : ''}`),
+      getCsvUrl: (type = 'WEEKLY', date = '') =>
+        `/api/reports/csv?type=${type}${date ? `&date=${date}` : ''}`
     }
   };
 })();

@@ -60,18 +60,52 @@ public class HabitLogService {
             throw new BadRequestException("Cannot log habits for future dates (" + logDate + ").");
         }
 
-        // Determine percentage based on status
+        // Enforce scheduling rules server-side: reject non-scheduled days
+        if (!habit.isScheduledFor(logDate)) {
+            throw new BadRequestException("Cannot log activity on a non-scheduled day (" + logDate.getDayOfWeek() + "). Rest days cannot be logged as activities.");
+        }
+
+        // Determine status and percentage from actualValue vs targetValue, or explicit status
+        HabitStatus status = request.getStatus();
         int percentage;
-        if (request.getStatus() == HabitStatus.COMPLETED) {
-            percentage = 100;
-        } else if (request.getStatus() == HabitStatus.MISSED) {
-            percentage = 0;
+        Double actualValue = request.getActualValue();
+
+        if (actualValue != null && habit.getTargetValue() != null && habit.getTargetValue() > 0) {
+            percentage = (int) Math.round((actualValue / habit.getTargetValue()) * 100);
+            percentage = Math.min(100, Math.max(0, percentage));
+            if (status == null) {
+                if (percentage >= 100) {
+                    status = HabitStatus.COMPLETED;
+                } else if (percentage > 0) {
+                    status = HabitStatus.PARTIAL;
+                } else {
+                    status = HabitStatus.MISSED;
+                }
+            }
         } else {
-            // PARTIAL
-            if (request.getCompletionPercentage() != null) {
-                percentage = Math.min(100, Math.max(1, request.getCompletionPercentage()));
+            if (status == null) {
+                status = HabitStatus.COMPLETED;
+            }
+            if (status == HabitStatus.COMPLETED) {
+                percentage = 100;
+                if (actualValue == null && habit.getTargetValue() != null) {
+                    actualValue = habit.getTargetValue().doubleValue();
+                }
+            } else if (status == HabitStatus.MISSED) {
+                percentage = 0;
+                if (actualValue == null) {
+                    actualValue = 0.0;
+                }
             } else {
-                percentage = 50; // default partial percentage
+                // PARTIAL
+                if (request.getCompletionPercentage() != null) {
+                    percentage = Math.min(100, Math.max(1, request.getCompletionPercentage()));
+                } else {
+                    percentage = 50; // default partial percentage
+                }
+                if (actualValue == null && habit.getTargetValue() != null) {
+                    actualValue = Math.round((habit.getTargetValue() * (percentage / 100.0)) * 100.0) / 100.0;
+                }
             }
         }
 
@@ -81,8 +115,9 @@ public class HabitLogService {
 
         if (existingOpt.isPresent()) {
             log = existingOpt.get();
-            log.setStatus(request.getStatus());
+            log.setStatus(status);
             log.setCompletionPercentage(percentage);
+            log.setActualValue(actualValue);
             log.setCompletionTime(LocalTime.now());
             if (request.getNote() != null) {
                 log.setNote(request.getNote().trim());
@@ -91,8 +126,9 @@ public class HabitLogService {
             log = new HabitLog();
             log.setHabit(habit);
             log.setLogDate(logDate);
-            log.setStatus(request.getStatus());
+            log.setStatus(status);
             log.setCompletionPercentage(percentage);
+            log.setActualValue(actualValue);
             log.setCompletionTime(LocalTime.now());
             log.setNote(request.getNote() != null ? request.getNote().trim() : null);
         }
@@ -129,6 +165,7 @@ public class HabitLogService {
                 dto.setLogId(log.getId());
                 dto.setStatus(log.getStatus());
                 dto.setCompletionPercentage(log.getCompletionPercentage());
+                dto.setActualValue(log.getActualValue());
                 dto.setNote(log.getNote());
             }
 
@@ -152,6 +189,16 @@ public class HabitLogService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Retrieves logs for all habits of a user within a specified date range.
+     */
+    public List<HabitLogResponse> getLogsByDateRange(Long userId, LocalDate startDate, LocalDate endDate) {
+        return habitLogRepository.findByUserIdAndLogDateBetween(userId, startDate, endDate)
+                .stream()
+                .map(this::mapEntityToResponse)
+                .collect(Collectors.toList());
+    }
+
     public HabitLogResponse mapEntityToResponse(HabitLog log) {
         HabitLogResponse res = new HabitLogResponse();
         res.setId(log.getId());
@@ -160,6 +207,7 @@ public class HabitLogService {
         res.setLogDate(log.getLogDate());
         res.setStatus(log.getStatus());
         res.setCompletionPercentage(log.getCompletionPercentage());
+        res.setActualValue(log.getActualValue());
         res.setCompletionTime(log.getCompletionTime());
         res.setNote(log.getNote());
         res.setCreatedAt(log.getCreatedAt());

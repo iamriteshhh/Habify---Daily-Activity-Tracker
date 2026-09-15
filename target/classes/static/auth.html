@@ -3,35 +3,39 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Habify — Log In or Create Account</title>
+  <title>Habify — Authentication</title>
   <link rel="stylesheet" href="css/style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
-<body>
+<body style="background-color: var(--bg-canvas, #0F0F0F); min-height: 100vh; display: flex; flex-direction: column;">
 
-  <!-- Minimal Auth Header -->
+  <!-- Minimal Header -->
   <header class="site-navbar">
     <div class="container nav-flex">
       <a href="index.html" class="brand-link">
         <div class="brand-flame">⚡</div>
         <span>Habify</span>
       </a>
-      <a href="index.html" class="btn btn-ghost" style="font-size: 0.88rem;">← Back to Home</a>
+      <a href="index.html" class="btn btn-ghost" style="font-size: 0.88rem;">← Back to Workspace</a>
     </div>
   </header>
 
   <!-- Auth Card Container -->
-  <div class="auth-page-container">
-    <div class="auth-box">
-      <div class="auth-header">
-        <h1 id="auth-main-title">Welcome to Habify</h1>
-        <p id="auth-main-subtitle">Build discipline, track habits, and view measurable progress</p>
+  <div class="auth-page-container" style="flex: 1; display: flex; align-items: center; justify-content: center; padding: 40px 16px;">
+    <div class="auth-box" style="max-width: 440px; width: 100%; background: var(--bg-surface, #171717); border: 1px solid var(--border-default, #262626); border-radius: 12px; padding: 32px; box-shadow: 0 4px 20px rgba(0,0,0,0.5);">
+      
+      <!-- Email Verification Banner -->
+      <div id="verify-status-banner" style="display: none; padding: 14px; border-radius: 8px; margin-bottom: 20px; font-size: 0.9rem; line-height: 1.4;"></div>
+
+      <div class="auth-header" style="text-align: center; margin-bottom: 24px;">
+        <h1 id="auth-main-title" style="font-size: 1.5rem; font-weight: 700; color: #ffffff; margin-bottom: 6px;">Welcome Back</h1>
+        <p id="auth-main-subtitle" style="font-size: 0.9rem; color: var(--text-secondary, #94a3b8);">Log in to access your persistent habit data and analytics</p>
       </div>
 
       <!-- Auth Switcher Tabs -->
-      <div class="auth-tabs">
+      <div class="auth-tabs" id="auth-nav-tabs" style="display: flex; gap: 8px; margin-bottom: 24px; border-bottom: 1px solid var(--border-default, #262626); padding-bottom: 8px;">
         <button id="tab-login" class="auth-tab-btn active" onclick="switchAuthMode('login')">Log In</button>
         <button id="tab-register" class="auth-tab-btn" onclick="switchAuthMode('register')">Create Account</button>
       </div>
@@ -40,16 +44,19 @@
       <form id="form-login" onsubmit="submitLogin(event)">
         <div class="form-group">
           <label class="form-label" for="login-identifier">Email or Username</label>
-          <input type="text" id="login-identifier" class="form-control" placeholder="e.g. alex@example.com or alex_bca" required autofocus>
+          <input type="text" id="login-identifier" class="form-control" placeholder="e.g. alex@example.com or alex_dev" required autofocus>
         </div>
 
         <div class="form-group">
-          <label class="form-label" for="login-pass">Password</label>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <label class="form-label" for="login-pass" style="margin-bottom: 0;">Password</label>
+            <a href="javascript:void(0)" onclick="switchAuthMode('forgot')" style="font-size: 0.8rem; color: var(--primary, #F5B942); text-decoration: none;">Forgot Password?</a>
+          </div>
           <input type="password" id="login-pass" class="form-control" placeholder="••••••••" required>
         </div>
 
-        <button type="submit" id="btn-login-action" class="btn btn-primary" style="width: 100%; margin-top: 10px;">
-          Log In to Workspace
+        <button type="submit" id="btn-login-action" class="btn btn-primary" style="width: 100%; margin-top: 14px; font-weight: 600;">
+          Log In
         </button>
       </form>
 
@@ -67,7 +74,7 @@
 
         <div class="form-group">
           <label class="form-label" for="reg-user">Username</label>
-          <input type="text" id="reg-user" class="form-control" placeholder="alex_bca" required>
+          <input type="text" id="reg-user" class="form-control" placeholder="alex_dev" required>
         </div>
 
         <div class="form-group">
@@ -75,49 +82,129 @@
           <input type="password" id="reg-pass" class="form-control" placeholder="••••••••" minlength="6" required>
         </div>
 
-        <button type="submit" id="btn-reg-action" class="btn btn-primary" style="width: 100%; margin-top: 10px;">
+        <button type="submit" id="btn-reg-action" class="btn btn-primary" style="width: 100%; margin-top: 14px; font-weight: 600;">
           Create Free Account
         </button>
       </form>
+
+      <!-- FORGOT PASSWORD FORM -->
+      <form id="form-forgot" onsubmit="submitForgotPassword(event)" style="display: none;">
+        <p style="font-size: 0.88rem; color: var(--text-secondary, #94a3b8); margin-bottom: 16px;">
+          Enter the email associated with your Habify account. We'll send a secure password reset link.
+        </p>
+        <div class="form-group">
+          <label class="form-label" for="forgot-email">Account Email</label>
+          <input type="email" id="forgot-email" class="form-control" placeholder="alex@example.com" required>
+        </div>
+
+        <button type="submit" id="btn-forgot-action" class="btn btn-primary" style="width: 100%; margin-top: 14px; font-weight: 600;">
+          Send Reset Instructions
+        </button>
+        <div style="text-align: center; margin-top: 16px;">
+          <a href="javascript:void(0)" onclick="switchAuthMode('login')" style="font-size: 0.85rem; color: var(--text-muted, #64748b); text-decoration: none;">← Back to Log In</a>
+        </div>
+      </form>
+
+      <!-- RESET PASSWORD FORM -->
+      <form id="form-reset" onsubmit="submitResetPassword(event)" style="display: none;">
+        <input type="hidden" id="reset-token-val">
+        <div class="form-group">
+          <label class="form-label" for="reset-pass">New Password (min. 6 characters)</label>
+          <input type="password" id="reset-pass" class="form-control" placeholder="••••••••" minlength="6" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="reset-pass-confirm">Confirm New Password</label>
+          <input type="password" id="reset-pass-confirm" class="form-control" placeholder="••••••••" minlength="6" required>
+        </div>
+
+        <button type="submit" id="btn-reset-action" class="btn btn-primary" style="width: 100%; margin-top: 14px; font-weight: 600;">
+          Set New Password
+        </button>
+      </form>
+
     </div>
   </div>
 
   <script src="js/api.js"></script>
   <script>
-    // Redirect immediately to dashboard if user is already authenticated
-    if (API.isAuthenticated()) {
-      window.location.href = 'dashboard.html';
+    if (API.isAuthenticated() && !window.location.search.includes('verifyToken')) {
+      window.location.href = 'index.html';
     }
 
     function switchAuthMode(mode) {
-      const loginForm = document.getElementById('form-login');
-      const registerForm = document.getElementById('form-register');
+      const forms = ['form-login', 'form-register', 'form-forgot', 'form-reset'];
+      forms.forEach(f => document.getElementById(f).style.display = 'none');
+
+      const tabs = document.getElementById('auth-nav-tabs');
       const tabLogin = document.getElementById('tab-login');
       const tabRegister = document.getElementById('tab-register');
       const title = document.getElementById('auth-main-title');
       const sub = document.getElementById('auth-main-subtitle');
 
       if (mode === 'login') {
-        loginForm.style.display = 'block';
-        registerForm.style.display = 'none';
+        tabs.style.display = 'flex';
+        document.getElementById('form-login').style.display = 'block';
         tabLogin.classList.add('active');
         tabRegister.classList.remove('active');
         title.textContent = 'Welcome Back';
-        sub.textContent = 'Log in to access your daily habits and streak analytics';
-        window.location.hash = 'login';
-      } else {
-        loginForm.style.display = 'none';
-        registerForm.style.display = 'block';
+        sub.textContent = 'Log in to access your persistent habit data and analytics';
+      } else if (mode === 'register') {
+        tabs.style.display = 'flex';
+        document.getElementById('form-register').style.display = 'block';
         tabLogin.classList.remove('active');
         tabRegister.classList.add('active');
         title.textContent = 'Create Your Account';
-        sub.textContent = 'Start tracking consistency and turn progress into measurable feedback';
-        window.location.hash = 'register';
+        sub.textContent = 'Build discipline, track habits, and view measurable progress';
+      } else if (mode === 'forgot') {
+        tabs.style.display = 'none';
+        document.getElementById('form-forgot').style.display = 'block';
+        title.textContent = 'Reset Password';
+        sub.textContent = 'Request a secure link to reset your account password';
+      } else if (mode === 'reset') {
+        tabs.style.display = 'none';
+        document.getElementById('form-reset').style.display = 'block';
+        title.textContent = 'Set New Password';
+        sub.textContent = 'Enter and confirm your updated password';
       }
     }
 
-    // Check URL Hash on load
-    document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', async () => {
+      const params = new URLSearchParams(window.location.search);
+      const verifyToken = params.get('verifyToken');
+      const resetToken = params.get('resetToken');
+
+      // Auto-handle email verification link
+      if (verifyToken) {
+        const banner = document.getElementById('verify-status-banner');
+        banner.style.display = 'block';
+        banner.style.background = 'rgba(245, 185, 66, 0.15)';
+        banner.style.color = '#F5B942';
+        banner.style.border = '1px solid #F5B942';
+        banner.innerHTML = 'Verifying your email token...';
+
+        try {
+          const res = await API.auth.verifyEmail(verifyToken);
+          banner.style.background = 'rgba(22, 163, 74, 0.15)';
+          banner.style.color = '#16A34A';
+          banner.style.border = '1px solid #16A34A';
+          banner.innerHTML = '✓ ' + (res.message || 'Email verified successfully! Please log in.');
+        } catch (err) {
+          banner.style.background = 'rgba(220, 38, 38, 0.15)';
+          banner.style.color = '#DC2626';
+          banner.style.border = '1px solid #DC2626';
+          banner.innerHTML = '✕ ' + err.message;
+        }
+        switchAuthMode('login');
+        return;
+      }
+
+      // Auto-handle password reset link
+      if (resetToken) {
+        document.getElementById('reset-token-val').value = resetToken;
+        switchAuthMode('reset');
+        return;
+      }
+
       if (window.location.hash === '#register') {
         switchAuthMode('register');
       } else {
@@ -137,12 +224,12 @@
         const response = await API.auth.login(loginId, pass);
         API.setSession(response);
         API.showToast('Login successful! Welcome back.', 'success');
-        setTimeout(() => window.location.href = 'dashboard.html', 300);
+        setTimeout(() => window.location.href = 'index.html', 300);
       } catch (err) {
         API.showToast(err.message, 'error');
       } finally {
         btn.disabled = false;
-        btn.textContent = 'Log In to Workspace';
+        btn.textContent = 'Log In';
       }
     }
 
@@ -159,13 +246,58 @@
         btn.textContent = 'Creating account...';
         const response = await API.auth.register(fullName, email, username, pass);
         API.setSession(response);
-        API.showToast('Account created successfully! Welcome to Habify.', 'success');
-        setTimeout(() => window.location.href = 'dashboard.html', 300);
+        API.showToast('Account created! ' + response.message, 'success');
+        setTimeout(() => window.location.href = 'index.html', 500);
       } catch (err) {
         API.showToast(err.message, 'error');
       } finally {
         btn.disabled = false;
         btn.textContent = 'Create Free Account';
+      }
+    }
+
+    async function submitForgotPassword(e) {
+      e.preventDefault();
+      const email = document.getElementById('forgot-email').value.trim();
+      const btn = document.getElementById('btn-forgot-action');
+
+      try {
+        btn.disabled = true;
+        btn.textContent = 'Sending...';
+        const res = await API.auth.forgotPassword(email);
+        API.showToast(res.message, 'success');
+        setTimeout(() => switchAuthMode('login'), 1500);
+      } catch (err) {
+        API.showToast(err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Send Reset Instructions';
+      }
+    }
+
+    async function submitResetPassword(e) {
+      e.preventDefault();
+      const token = document.getElementById('reset-token-val').value;
+      const pass = document.getElementById('reset-pass').value;
+      const confirm = document.getElementById('reset-pass-confirm').value;
+      const btn = document.getElementById('btn-reset-action');
+
+      if (pass !== confirm) {
+        API.showToast('Passwords do not match.', 'error');
+        return;
+      }
+
+      try {
+        btn.disabled = true;
+        btn.textContent = 'Updating password...';
+        const res = await API.auth.resetPassword(token, pass);
+        API.showToast(res.message, 'success');
+        setTimeout(() => switchAuthMode('login'), 1500);
+      } catch (err) {
+        API.showToast(err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Set New Password';
       }
     }
   </script>

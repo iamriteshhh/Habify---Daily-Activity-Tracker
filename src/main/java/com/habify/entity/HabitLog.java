@@ -35,6 +35,9 @@ public class HabitLog {
     @Column(name = "completion_percentage", nullable = false)
     private Integer completionPercentage = 100;
 
+    @Column(name = "actual_value")
+    private Double actualValue;
+
     @Column(name = "completion_time")
     private LocalTime completionTime;
 
@@ -104,6 +107,14 @@ public class HabitLog {
 
     public void setCompletionPercentage(Integer completionPercentage) {
         this.completionPercentage = completionPercentage;
+    }
+
+    public Double getActualValue() {
+        return actualValue;
+    }
+
+    public void setActualValue(Double actualValue) {
+        this.actualValue = actualValue;
     }
 
     public LocalTime getCompletionTime() {

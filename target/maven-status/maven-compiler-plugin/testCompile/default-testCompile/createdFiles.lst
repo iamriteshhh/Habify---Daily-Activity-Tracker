@@ -1,4 +1,4 @@
 com\habify\service\StreakServiceTest.class
-com\habify\service\ScoringServiceTest.class
 com\habify\HabifyApplicationTests.class
+com\habify\service\ScoringServiceTest.class
 com\habify\service\HabitLogServiceTest.class

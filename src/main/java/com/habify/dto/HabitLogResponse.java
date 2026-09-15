@@ -14,6 +14,7 @@ public class HabitLogResponse {
     private LocalDate logDate;
     private HabitStatus status;
     private Integer completionPercentage;
+    private Double actualValue;
     private LocalTime completionTime;
     private String note;
     private LocalDateTime createdAt;
@@ -67,6 +68,14 @@ public class HabitLogResponse {
 
     public void setCompletionPercentage(Integer completionPercentage) {
         this.completionPercentage = completionPercentage;
+    }
+
+    public Double getActualValue() {
+        return actualValue;
+    }
+
+    public void setActualValue(Double actualValue) {
+        this.actualValue = actualValue;
     }
 
     public LocalTime getCompletionTime() {

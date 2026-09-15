@@ -16,6 +16,7 @@ public class TodayHabitDTO {
     private boolean isScheduledToday;
     private HabitStatus status;
     private Integer completionPercentage;
+    private Double actualValue;
     private Long logId;
     private String note;
     private int currentStreak;
@@ -101,6 +102,14 @@ public class TodayHabitDTO {
 
     public void setCompletionPercentage(Integer completionPercentage) {
         this.completionPercentage = completionPercentage;
+    }
+
+    public Double getActualValue() {
+        return actualValue;
+    }
+
+    public void setActualValue(Double actualValue) {
+        this.actualValue = actualValue;
     }
 
     public Long getLogId() {
