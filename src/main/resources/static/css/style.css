@@ -1191,69 +1191,97 @@ button, input, select, textarea {
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(0, 0, 0, 0.75);
+  background: rgba(0, 0, 0, 0.78);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 2000;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity var(--transition-smooth);
   padding: 20px;
 }
 
+.modal-backdrop[style*="display: none"] {
+  display: none !important;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.modal-backdrop:not([style*="display: none"]),
 .modal-backdrop.open {
   opacity: 1;
   pointer-events: auto;
 }
 
-.modal-card {
-  background: var(--bg-surface);
-  border: 1px solid var(--border-default);
-  border-radius: var(--radius-lg);
+.modal-dialog, .modal-card {
+  background: var(--bg-surface, #171717);
+  border: 1px solid var(--border-default, #333333);
+  border-radius: var(--radius-lg, 14px);
   width: 100%;
   max-width: 520px;
-  box-shadow: var(--shadow-lg);
-  transform: translateY(16px) scale(0.98);
-  transition: transform var(--transition-smooth);
+  box-shadow: var(--shadow-lg, 0 12px 36px rgba(0, 0, 0, 0.6));
   overflow: hidden;
+  position: relative;
+  animation: modalPopIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-.modal-backdrop.open .modal-card {
-  transform: translateY(0) scale(1);
+@keyframes modalPopIn {
+  from { opacity: 0; transform: translateY(14px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-.modal-card-header {
+.modal-header, .modal-card-header {
   padding: 18px 24px;
-  border-bottom: 1px solid var(--border-subtle);
+  border-bottom: 1px solid var(--border-subtle, #262626);
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
-.modal-card-header h3 {
+.modal-header h3, .modal-card-header h3 {
   font-size: 1.15rem;
+  font-weight: 700;
   color: #ffffff;
+  margin: 0;
 }
 
-.btn-close {
+.modal-close-btn, .btn-close {
   background: transparent;
   border: none;
-  color: var(--text-muted);
+  color: var(--text-muted, #64748b);
   font-size: 1.3rem;
   cursor: pointer;
   line-height: 1;
-  transition: color var(--transition-fast);
+  padding: 4px 8px;
+  border-radius: var(--radius-xs, 4px);
+  transition: all var(--transition-fast, 0.15s ease);
 }
 
-.btn-close:hover {
+.modal-close-btn:hover, .btn-close:hover {
   color: #ffffff;
+  background: var(--bg-card-hover, #262626);
 }
 
-.modal-card-body {
+.modal-body, .modal-card-body {
   padding: 24px;
+}
+
+.modal-dialog form {
+  padding: 20px 24px;
+}
+
+.modal-footer {
+  padding: 16px 24px;
+  border-top: 1px solid var(--border-subtle, #262626);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.modal-dialog form .modal-footer {
+  margin: 20px -24px -20px -24px;
 }
 
 /* Form Styles */
@@ -1531,25 +1559,198 @@ button, input, select, textarea {
 
 @media (max-width: 768px) {
   .container {
-    padding: 0 14px;
+    padding: 0 16px;
   }
   
+  /* Mobile Navigation Bar */
+  .nav-flex {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  
+  .brand-tagline {
+    display: none;
+  }
+
+  .nav-menu {
+    order: 3;
+    width: 100%;
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 6px;
+    scrollbar-width: none;
+    gap: 6px;
+  }
+  
+  .nav-menu::-webkit-scrollbar {
+    display: none;
+  }
+
+  .nav-link {
+    flex-shrink: 0;
+    font-size: 0.84rem;
+    padding: 6px 12px;
+  }
+
+  /* Summary KPI Cards */
   .summary-kpi-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
   }
   
+  /* Toolbar & Filter Shelf */
   .tracker-toolbar {
     flex-direction: column;
     align-items: stretch;
+    gap: 14px;
   }
   
-  .toolbar-left, .toolbar-right {
+  .toolbar-left {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  
+  .week-navigator {
     justify-content: space-between;
+    width: 100%;
   }
-  
+
+  .filter-shelf {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 4px;
+    scrollbar-width: none;
+  }
+
+  .filter-shelf::-webkit-scrollbar {
+    display: none;
+  }
+
+  .filter-pill {
+    flex-shrink: 0;
+  }
+
+  .toolbar-right .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Sticky Habit Matrix Column for Mobile */
+  .th-task-col {
+    width: 180px !important;
+    min-width: 180px !important;
+    padding-left: 12px !important;
+  }
+
+  .td-task-cell {
+    padding-left: 12px !important;
+  }
+
+  .task-category-icon {
+    width: 26px;
+    height: 26px;
+    font-size: 0.85rem;
+  }
+
+  .task-meta-line {
+    font-size: 0.72rem;
+  }
+
+  /* Footer on Mobile */
   .footer-flex {
     flex-direction: column;
     text-align: center;
+    gap: 16px;
+  }
+
+  .footer-links {
+    flex-wrap: wrap;
+    justify-content: center;
   }
 }
 
+@media (max-width: 480px) {
+  .summary-kpi-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Mobile Modals (Bottom Sheet) */
+  .modal-backdrop {
+    padding: 0;
+    align-items: flex-end;
+  }
+
+  .modal-dialog, .modal-card {
+    border-radius: 18px 18px 0 0;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  /* Prevent iOS zoom on input focus */
+  .form-control, input, select, textarea {
+    font-size: 16px !important;
+  }
+
+  .form-row {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .form-grid-2 {
+    grid-template-columns: 1fr;
+  }
+
+  .auth-card {
+    padding: 24px 18px;
+  }
+
+  .not-found-container {
+    margin: 40px auto;
+  }
+
+  .error-code {
+    font-size: 3.6rem;
+  }
+}
+
+/* ==========================================================================
+   Print Styles (Print Summary Button)
+   ========================================================================== */
+@media print {
+  body {
+    background: #FFFFFF !important;
+    color: #111111 !important;
+  }
+
+  .site-navbar,
+  .toolbar-strip,
+  .modal-backdrop,
+  .toast-shelf,
+  .site-footer,
+  .btn,
+  .week-nav-group,
+  .filter-shelf {
+    display: none !important;
+  }
+
+  .matrix-wrapper,
+  .summary-card,
+  .report-sheet-card,
+  .chart-card {
+    border: 1px solid #CCCCCC !important;
+    background: #FFFFFF !important;
+    color: #000000 !important;
+    box-shadow: none !important;
+    break-inside: avoid;
+  }
+
+  .summary-value,
+  .report-metric-value,
+  h1, h2, h3 {
+    color: #000000 !important;
+  }
+}

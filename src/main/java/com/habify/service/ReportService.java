@@ -94,9 +94,10 @@ public class ReportService {
             Map<LocalDate, HabitLog> hLogMap = hLogs.stream()
                     .collect(Collectors.toMap(HabitLog::getLogDate, l -> l, (a, b) -> a));
 
+            LocalDate habitCreated = h.getCreatedAt() != null ? h.getCreatedAt().toLocalDate() : startDate;
             LocalDate cur = startDate;
             while (!cur.isAfter(endDate)) {
-                if (h.isScheduledFor(cur)) {
+                if (!cur.isBefore(habitCreated) && h.isScheduledFor(cur)) {
                     scheduledCount++;
                     HabitLog log = hLogMap.get(cur);
                     if (log != null) {
@@ -149,7 +150,8 @@ public class ReportService {
         while (!cur.isAfter(endDate)) {
             int scheduledOnDay = 0;
             for (Habit h : habits) {
-                if (h.isScheduledFor(cur)) scheduledOnDay++;
+                LocalDate habitCreated = h.getCreatedAt() != null ? h.getCreatedAt().toLocalDate() : startDate;
+                if (!cur.isBefore(habitCreated) && h.isScheduledFor(cur)) scheduledOnDay++;
             }
             if (scheduledOnDay > 0) {
                 List<HabitLog> dayLogs = logsByDate.getOrDefault(cur, Collections.emptyList());
@@ -217,8 +219,8 @@ public class ReportService {
 
         for (HabitPerformanceDTO h : summary.getHabitBreakdown()) {
             writer.printf("\"%s\",\"%s\",%d,%d,%d,%d,%d%%,%d\n",
-                    h.getTitle().replace("\"", "\"\""),
-                    h.getCategory().replace("\"", "\"\""),
+                    sanitizeCsvField(h.getTitle()),
+                    sanitizeCsvField(h.getCategory()),
                     h.getScheduledCount(),
                     h.getCompletedCount(),
                     h.getPartialCount(),
@@ -238,5 +240,21 @@ public class ReportService {
         );
 
         writer.flush();
+    }
+
+    /**
+     * Sanitizes CSV field values against Formula Injection (DDE).
+     * Prevents execution of spreadsheet formulas starting with =, +, -, @, tab, or carriage return.
+     */
+    private String sanitizeCsvField(String field) {
+        if (field == null) {
+            return "";
+        }
+        String clean = field.replace("\"", "\"\"");
+        if (clean.startsWith("=") || clean.startsWith("+") || clean.startsWith("-") ||
+            clean.startsWith("@") || clean.startsWith("\t") || clean.startsWith("\r")) {
+            clean = "'" + clean;
+        }
+        return clean;
     }
 }

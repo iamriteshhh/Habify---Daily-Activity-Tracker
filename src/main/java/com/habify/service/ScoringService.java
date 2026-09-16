@@ -109,6 +109,8 @@ public class ScoringService {
 
         List<DailyProgressDTO> weeklyList = new ArrayList<>();
 
+        Set<Long> activeHabitIds = activeHabits.stream().map(Habit::getId).collect(Collectors.toSet());
+
         for (int i = 0; i < 7; i++) {
             LocalDate date = startDate.plusDays(i);
             String dayName = date.getDayOfWeek().getDisplayName(TextStyle.SHORT, Locale.ENGLISH);
@@ -128,6 +130,9 @@ public class ScoringService {
             int sumPct = 0;
 
             for (HabitLog log : dateLogs) {
+                if (!activeHabitIds.contains(log.getHabit().getId())) {
+                    continue;
+                }
                 if (log.getStatus() == HabitStatus.COMPLETED) {
                     completed++;
                     sumPct += 100;

@@ -13,7 +13,11 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
+import java.util.HexFormat;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -45,6 +49,23 @@ public class UserService {
     }
 
     /**
+     * Hashes a sensitive raw token using SHA-256 before database persistence.
+     * Protects tokens against theft in the event of database compromise or backup leaks.
+     */
+    public static String hashToken(String rawToken) {
+        if (rawToken == null || rawToken.trim().isEmpty()) {
+            return null;
+        }
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(rawToken.trim().getBytes(StandardCharsets.UTF_8));
+            return HexFormat.of().formatHex(hash);
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("SHA-256 algorithm not available", e);
+        }
+    }
+
+    /**
      * Registers a new user with email verification token.
      */
     @Transactional
@@ -64,18 +85,18 @@ public class UserService {
         User user = new User(request.getFullName().trim(), email, username, hashedPassword);
         
         // Generate email verification token (valid for 48 hours)
-        String verifyToken = UUID.randomUUID().toString().replace("-", "");
-        user.setVerificationToken(verifyToken);
+        String rawVerifyToken = UUID.randomUUID().toString().replace("-", "");
+        user.setVerificationToken(hashToken(rawVerifyToken));
         user.setVerificationTokenExpiry(LocalDateTime.now().plusHours(48));
         user.setEmailVerified(false);
 
         User savedUser = userRepository.save(user);
 
-        // Dispatch verification email / log action
-        mailService.sendVerificationEmail(savedUser.getEmail(), verifyToken);
+        // Dispatch verification email / log action with raw token
+        mailService.sendVerificationEmail(savedUser.getEmail(), rawVerifyToken);
 
         // Issue signed JWT
-        String token = jwtUtil.generateToken(savedUser.getId(), savedUser.getUsername(), savedUser.getEmail());
+        String token = jwtUtil.generateToken(savedUser.getId(), savedUser.getUsername(), savedUser.getEmail(), savedUser.getTokenVersion());
 
         return new AuthResponse(
                 savedUser.getId(),
@@ -100,7 +121,7 @@ public class UserService {
             throw new UnauthorizedException("Invalid email/username or password.");
         }
 
-        String token = jwtUtil.generateToken(user.getId(), user.getUsername(), user.getEmail());
+        String token = jwtUtil.generateToken(user.getId(), user.getUsername(), user.getEmail(), user.getTokenVersion());
 
         return new AuthResponse(
                 user.getId(),
@@ -122,7 +143,8 @@ public class UserService {
             throw new BadRequestException("Verification token is required.");
         }
 
-        User user = userRepository.findByVerificationToken(token.trim())
+        String hashedToken = hashToken(token.trim());
+        User user = userRepository.findByVerificationToken(hashedToken)
                 .orElseThrow(() -> new BadRequestException("Invalid or expired verification token."));
 
         if (user.getVerificationTokenExpiry() != null && user.getVerificationTokenExpiry().isBefore(LocalDateTime.now())) {
@@ -147,12 +169,12 @@ public class UserService {
 
         if (userOpt.isPresent()) {
             User user = userOpt.get();
-            String resetToken = UUID.randomUUID().toString().replace("-", "");
-            user.setResetPasswordToken(resetToken);
+            String rawResetToken = UUID.randomUUID().toString().replace("-", "");
+            user.setResetPasswordToken(hashToken(rawResetToken));
             user.setResetPasswordTokenExpiry(LocalDateTime.now().plusMinutes(15));
             userRepository.save(user);
 
-            mailService.sendPasswordResetEmail(user.getEmail(), resetToken);
+            mailService.sendPasswordResetEmail(user.getEmail(), rawResetToken);
         }
 
         // Return constant message to prevent account enumeration
@@ -164,7 +186,8 @@ public class UserService {
      */
     @Transactional
     public MessageResponse resetPassword(ResetPasswordRequest request) {
-        User user = userRepository.findByResetPasswordToken(request.getToken().trim())
+        String hashedToken = hashToken(request.getToken().trim());
+        User user = userRepository.findByResetPasswordToken(hashedToken)
                 .orElseThrow(() -> new BadRequestException("Invalid or expired password reset token."));
 
         if (user.getResetPasswordTokenExpiry() != null && user.getResetPasswordTokenExpiry().isBefore(LocalDateTime.now())) {
@@ -174,9 +197,40 @@ public class UserService {
         user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
         user.setResetPasswordToken(null);
         user.setResetPasswordTokenExpiry(null);
+        // Increment token version to invalidate all previously issued tokens
+        user.setTokenVersion((user.getTokenVersion() != null ? user.getTokenVersion() : 1) + 1);
         userRepository.save(user);
 
         return MessageResponse.ok("Password has been successfully updated. You can now log in with your new password.");
+    }
+
+    /**
+     * Revokes active session tokens for the user upon logout.
+     */
+    @Transactional
+    public void logout(Long userId) {
+        User user = getUserById(userId);
+        user.setTokenVersion((user.getTokenVersion() != null ? user.getTokenVersion() : 1) + 1);
+        userRepository.save(user);
+    }
+
+    /**
+     * Resends email verification link.
+     */
+    @Transactional
+    public MessageResponse resendVerification(Long userId) {
+        User user = getUserById(userId);
+        if (Boolean.TRUE.equals(user.getEmailVerified())) {
+            return MessageResponse.ok("Your email is already verified.");
+        }
+
+        String rawVerifyToken = UUID.randomUUID().toString().replace("-", "");
+        user.setVerificationToken(hashToken(rawVerifyToken));
+        user.setVerificationTokenExpiry(LocalDateTime.now().plusHours(48));
+        userRepository.save(user);
+
+        mailService.sendVerificationEmail(user.getEmail(), rawVerifyToken);
+        return MessageResponse.ok("A new verification link has been sent to your email.");
     }
 
     /**

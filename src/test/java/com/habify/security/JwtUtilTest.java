@@ -48,4 +48,25 @@ class JwtUtilTest {
 
         assertFalse(jwtUtil.validateToken(tamperedToken));
     }
+
+    @Test
+    @DisplayName("Generate token with tokenVersion claim and extract successfully")
+    void testTokenVersionClaim() {
+        String token = jwtUtil.generateToken(10L, "alex_dev", "alex@habify.com", 3);
+
+        assertNotNull(token);
+        assertTrue(jwtUtil.validateToken(token));
+        assertEquals(3, jwtUtil.getTokenVersionFromToken(token));
+    }
+
+    @Test
+    @DisplayName("Properly decodes 64-character hexadecimal key into 256-bit binary key")
+    void testHexKeyDecoding() {
+        String hexSecret = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
+        JwtUtil hexJwtUtil = new JwtUtil(hexSecret, 3600000L);
+        String token = hexJwtUtil.generateToken(99L, "hex_user", "hex@habify.com", 1);
+
+        assertTrue(hexJwtUtil.validateToken(token));
+        assertEquals(99L, hexJwtUtil.getUserIdFromToken(token));
+    }
 }

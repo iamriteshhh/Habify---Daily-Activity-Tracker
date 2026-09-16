@@ -113,6 +113,7 @@ public class HabitService {
     @Transactional
     public void deleteHabit(Long habitId, Long userId) {
         Habit habit = getHabitEntityByIdAndUser(habitId, userId);
+        habitLogRepository.deleteByHabitId(habit.getId());
         habitRepository.delete(habit);
     }
 

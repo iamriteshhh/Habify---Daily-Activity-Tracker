@@ -45,7 +45,7 @@ public class StreakService {
                 .collect(Collectors.toMap(HabitLog::getLogDate, log -> log, (existing, replace) -> existing));
 
         int currentStreak = calculateCurrentStreak(habit, today, logMap);
-        int longestStreak = calculateLongestStreak(habit, logs);
+        int longestStreak = Math.max(calculateLongestStreak(habit, logs), currentStreak);
         int totalCompletedDays = (int) logs.stream()
                 .filter(l -> l.getStatus() == HabitStatus.COMPLETED || l.getCompletionPercentage() >= 50)
                 .count();

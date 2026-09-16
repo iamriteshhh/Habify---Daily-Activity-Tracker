@@ -18,6 +18,7 @@ public class HabitRequest {
     private String description;
 
     @NotBlank(message = "Category is required")
+    @Size(max = 50, message = "Category cannot exceed 50 characters")
     private String category = "Other";
 
     private Priority priority = Priority.MEDIUM;
@@ -28,11 +29,13 @@ public class HabitRequest {
     /**
      * E.g. "MONDAY,WEDNESDAY,FRIDAY" (Required if frequencyType is SPECIFIC_DAYS)
      */
+    @Size(max = 100, message = "Scheduled days cannot exceed 100 characters")
     private String scheduledDays;
 
     @Min(value = 1, message = "Target value must be at least 1")
     private Integer targetValue = 1;
 
+    @Size(max = 30, message = "Unit cannot exceed 30 characters")
     private String unit = "times";
 
     private TimeOfDay preferredTime = TimeOfDay.ANYTIME;

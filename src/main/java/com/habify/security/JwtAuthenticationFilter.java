@@ -47,6 +47,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                 if (userOpt.isPresent()) {
                     User user = userOpt.get();
+                    Integer tokenVersion = jwtUtil.getTokenVersionFromToken(token);
+                    if (user.getTokenVersion() != null && !user.getTokenVersion().equals(tokenVersion)) {
+                        logger.warn("Token version mismatch for user ID " + userId + " - token has been revoked.");
+                        filterChain.doFilter(request, response);
+                        return;
+                    }
+
                     UserPrincipal principal = new UserPrincipal(
                             user.getId(),
                             user.getFullName(),

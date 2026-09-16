@@ -29,6 +29,7 @@ public class ReportController {
             @RequestParam(name = "type", defaultValue = "WEEKLY") String type,
             @RequestParam(name = "date", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
             HttpServletRequest request) {
+        authHelper.requireEmailVerified();
         Long userId = authHelper.getAuthenticatedUserId(request);
         return ResponseEntity.ok(reportService.getReportSummary(userId, type, date));
     }
@@ -39,6 +40,7 @@ public class ReportController {
             @RequestParam(name = "date", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
             HttpServletRequest request,
             HttpServletResponse response) throws IOException {
+        authHelper.requireEmailVerified();
         Long userId = authHelper.getAuthenticatedUserId(request);
         reportService.exportCsv(userId, type, date, response);
     }

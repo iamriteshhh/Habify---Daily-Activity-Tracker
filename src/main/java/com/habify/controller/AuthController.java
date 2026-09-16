@@ -63,4 +63,18 @@ public class AuthController {
         UserProfileResponse profile = userService.getProfile(userId);
         return ResponseEntity.ok(profile);
     }
+
+    @PostMapping("/logout")
+    public ResponseEntity<MessageResponse> logout(HttpServletRequest request) {
+        Long userId = authHelper.getAuthenticatedUserId(request);
+        userService.logout(userId);
+        return ResponseEntity.ok(MessageResponse.ok("Logged out successfully. All sessions have been invalidated."));
+    }
+
+    @PostMapping("/resend-verification")
+    public ResponseEntity<MessageResponse> resendVerification(HttpServletRequest request) {
+        Long userId = authHelper.getAuthenticatedUserId(request);
+        MessageResponse response = userService.resendVerification(userId);
+        return ResponseEntity.ok(response);
+    }
 }

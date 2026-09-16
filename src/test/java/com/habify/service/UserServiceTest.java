@@ -62,7 +62,7 @@ class UserServiceTest {
         savedUser.setId(10L);
 
         when(userRepository.save(any(User.class))).thenReturn(savedUser);
-        when(jwtUtil.generateToken(10L, "pooja_v", "pooja@bca.edu")).thenReturn("jwt.signed.token");
+        when(jwtUtil.generateToken(10L, "pooja_v", "pooja@bca.edu", 1)).thenReturn("jwt.signed.token");
 
         AuthResponse response = userService.register(request);
 
@@ -92,7 +92,7 @@ class UserServiceTest {
 
         when(userRepository.findByEmailOrUsername("pooja_v", "pooja_v")).thenReturn(Optional.of(user));
         when(passwordEncoder.matches("password123", "hashedPassword")).thenReturn(true);
-        when(jwtUtil.generateToken(10L, "pooja_v", "pooja@bca.edu")).thenReturn("jwt.signed.token");
+        when(jwtUtil.generateToken(10L, "pooja_v", "pooja@bca.edu", 1)).thenReturn("jwt.signed.token");
 
         AuthResponse response = userService.login(request);
 
@@ -136,5 +136,91 @@ class UserServiceTest {
         assertEquals("pooja@bca.edu", profile.getEmail());
         assertEquals(4L, profile.getTotalHabits());
         assertEquals(3L, profile.getActiveHabits());
+    }
+
+    @Test
+    @DisplayName("ResetPassword: Increments tokenVersion and validates against SHA-256 hashed token")
+    void testResetPasswordIncrementsTokenVersion() {
+        User user = new User("Pooja Verma", "pooja@bca.edu", "pooja_v", "oldHash");
+        user.setTokenVersion(1);
+        String rawToken = "validToken123";
+        String hashedToken = UserService.hashToken(rawToken);
+        user.setResetPasswordToken(hashedToken);
+        user.setResetPasswordTokenExpiry(LocalDateTime.now().plusMinutes(10));
+
+        when(userRepository.findByResetPasswordToken(hashedToken)).thenReturn(Optional.of(user));
+        when(passwordEncoder.encode("newPassword123")).thenReturn("newHash");
+
+        com.habify.dto.ResetPasswordRequest request = new com.habify.dto.ResetPasswordRequest(rawToken, "newPassword123");
+        com.habify.dto.MessageResponse response = userService.resetPassword(request);
+
+        assertNotNull(response);
+        assertEquals(2, user.getTokenVersion());
+        assertNull(user.getResetPasswordToken());
+        assertNull(user.getResetPasswordTokenExpiry());
+    }
+
+    @Test
+    @DisplayName("VerifyEmail: Validates SHA-256 hashed token and marks account as verified")
+    void testVerifyEmailSuccess() {
+        User user = new User("Pooja Verma", "pooja@bca.edu", "pooja_v", "hashedPassword");
+        String rawToken = "rawVerifyToken123";
+        String hashedToken = UserService.hashToken(rawToken);
+        user.setVerificationToken(hashedToken);
+        user.setVerificationTokenExpiry(LocalDateTime.now().plusHours(24));
+        user.setEmailVerified(false);
+
+        when(userRepository.findByVerificationToken(hashedToken)).thenReturn(Optional.of(user));
+
+        com.habify.dto.MessageResponse response = userService.verifyEmail(rawToken);
+
+        assertNotNull(response);
+        assertTrue(user.getEmailVerified());
+        assertNull(user.getVerificationToken());
+        assertNull(user.getVerificationTokenExpiry());
+    }
+
+    @Test
+    @DisplayName("VerifyEmail: Expired verification token throws BadRequestException")
+    void testVerifyEmailExpired() {
+        User user = new User("Pooja Verma", "pooja@bca.edu", "pooja_v", "hashedPassword");
+        String rawToken = "expiredToken123";
+        String hashedToken = UserService.hashToken(rawToken);
+        user.setVerificationToken(hashedToken);
+        user.setVerificationTokenExpiry(LocalDateTime.now().minusHours(1));
+
+        when(userRepository.findByVerificationToken(hashedToken)).thenReturn(Optional.of(user));
+
+        assertThrows(com.habify.exception.BadRequestException.class, () -> userService.verifyEmail(rawToken));
+    }
+
+    @Test
+    @DisplayName("ForgotPassword: Hashes reset token and dispatches email with raw token")
+    void testForgotPasswordDispatchesRawToken() {
+        User user = new User("Pooja Verma", "pooja@bca.edu", "pooja_v", "hashedPassword");
+        when(userRepository.findByEmail("pooja@bca.edu")).thenReturn(Optional.of(user));
+
+        com.habify.dto.ForgotPasswordRequest request = new com.habify.dto.ForgotPasswordRequest("pooja@bca.edu");
+        com.habify.dto.MessageResponse response = userService.forgotPassword(request);
+
+        assertNotNull(response);
+        assertNotNull(user.getResetPasswordToken());
+        // Verify token saved in entity is a 64-character SHA-256 hex string
+        assertEquals(64, user.getResetPasswordToken().length());
+        assertNotNull(user.getResetPasswordTokenExpiry());
+    }
+
+    @Test
+    @DisplayName("Logout: Increments tokenVersion to revoke active tokens")
+    void testLogoutRevokesTokens() {
+        User user = new User("Pooja Verma", "pooja@bca.edu", "pooja_v", "hash");
+        user.setId(10L);
+        user.setTokenVersion(3);
+
+        when(userRepository.findById(10L)).thenReturn(Optional.of(user));
+
+        userService.logout(10L);
+
+        assertEquals(4, user.getTokenVersion());
     }
 }

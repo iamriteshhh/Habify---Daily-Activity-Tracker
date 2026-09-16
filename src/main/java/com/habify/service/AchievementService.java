@@ -51,8 +51,9 @@ public class AchievementService {
 
         int maxStreak = 0;
         for (Habit h : habits) {
-            int cur = streakService.calculateStreak(h).getCurrentStreak();
-            int longest = streakService.calculateStreak(h).getLongestStreak();
+            com.habify.dto.StreakDTO streak = streakService.calculateStreak(h);
+            int cur = streak.getCurrentStreak();
+            int longest = streak.getLongestStreak();
             if (cur > maxStreak) maxStreak = cur;
             if (longest > maxStreak) maxStreak = longest;
         }

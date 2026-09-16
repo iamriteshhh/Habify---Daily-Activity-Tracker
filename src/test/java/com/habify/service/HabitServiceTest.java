@@ -24,6 +24,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -107,5 +108,21 @@ class HabitServiceTest {
         when(habitRepository.findByIdAndUserId(eq(999L), eq(1L))).thenReturn(Optional.empty());
 
         assertThrows(ResourceNotFoundException.class, () -> habitService.getHabitResponseById(999L, 1L));
+    }
+
+    @Test
+    @DisplayName("Delete Habit: Deleting habit purges associated logs first to preserve DB integrity")
+    void testDeleteHabitCascadeLogs() {
+        Long userId = 1L;
+        Long habitId = 42L;
+        Habit habit = new Habit();
+        habit.setId(habitId);
+
+        when(habitRepository.findByIdAndUserId(eq(habitId), eq(userId))).thenReturn(Optional.of(habit));
+
+        habitService.deleteHabit(habitId, userId);
+
+        verify(habitLogRepository).deleteByHabitId(habitId);
+        verify(habitRepository).delete(habit);
     }
 }

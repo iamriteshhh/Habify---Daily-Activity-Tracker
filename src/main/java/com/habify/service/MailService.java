@@ -76,12 +76,12 @@ public class MailService {
             }
         }
 
-        // Local development console fallback
+        // Local development console fallback - output real actionable link for local development & testing
         log.info("================================================================================");
         log.info("[HABIFY DEV EMAIL SIMULATION] Action: {}", purpose);
         log.info("To: {}", recipientEmail);
         log.info("Subject: {}", subject);
-        log.info("Action Link: {}", actionUrl);
+        log.info("Action Link (Open in Browser): {}", actionUrl);
         log.info("================================================================================");
     }
 }

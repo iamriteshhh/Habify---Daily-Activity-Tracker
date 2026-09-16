@@ -2,10 +2,13 @@ package com.habify.service;
 
 import com.habify.dto.HabitLogRequest;
 import com.habify.dto.HabitLogResponse;
+import com.habify.entity.Goal;
+import com.habify.entity.GoalStatus;
 import com.habify.entity.Habit;
 import com.habify.entity.HabitLog;
 import com.habify.entity.HabitStatus;
 import com.habify.exception.BadRequestException;
+import com.habify.repository.GoalRepository;
 import com.habify.repository.HabitLogRepository;
 import com.habify.repository.HabitRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,11 +19,13 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -35,6 +40,9 @@ class HabitLogServiceTest {
     @Mock
     private UserService userService;
 
+    @Mock
+    private GoalRepository goalRepository;
+
     private StreakService streakService;
     private HabitService habitService;
     private HabitLogService habitLogService;
@@ -43,7 +51,7 @@ class HabitLogServiceTest {
     void setUp() {
         streakService = new StreakService(habitLogRepository);
         habitService = new HabitService(habitRepository, habitLogRepository, userService, streakService);
-        habitLogService = new HabitLogService(habitLogRepository, habitRepository, habitService, streakService);
+        habitLogService = new HabitLogService(habitLogRepository, habitRepository, habitService, streakService, goalRepository);
     }
 
     @Test
@@ -115,5 +123,39 @@ class HabitLogServiceTest {
         assertNotNull(response);
         assertEquals(HabitStatus.COMPLETED, response.getStatus());
         assertEquals(100, response.getCompletionPercentage());
+    }
+
+    @Test
+    @DisplayName("Log Habit: Completing a habit automatically advances active goal progress")
+    void testSuccessfulHabitLogAdvancesActiveGoals() {
+        Long userId = 1L;
+        Long habitId = 8L;
+        LocalDate today = LocalDate.now();
+
+        Habit habit = new Habit();
+        habit.setId(habitId);
+        habit.setIsActive(true);
+
+        when(habitRepository.findByIdAndUserId(eq(habitId), eq(userId))).thenReturn(Optional.of(habit));
+        when(habitLogRepository.findByHabitIdAndLogDate(eq(habitId), eq(today))).thenReturn(Optional.empty());
+
+        HabitLog savedLog = new HabitLog(habit, today, HabitStatus.COMPLETED, 100, "Done");
+        when(habitLogRepository.save(any(HabitLog.class))).thenReturn(savedLog);
+
+        Goal goal = new Goal();
+        goal.setId(10L);
+        goal.setTargetType("HABIT_LOGS");
+        goal.setCurrentValue(4);
+        goal.setTargetValue(5);
+        goal.setStatus(GoalStatus.ACTIVE);
+
+        when(goalRepository.findByUserIdAndStatus(eq(userId), eq(GoalStatus.ACTIVE))).thenReturn(List.of(goal));
+
+        HabitLogRequest request = new HabitLogRequest(today, HabitStatus.COMPLETED, 100, null);
+        habitLogService.logHabit(userId, habitId, request);
+
+        assertEquals(5, goal.getCurrentValue());
+        assertEquals(GoalStatus.COMPLETED, goal.getStatus());
+        verify(goalRepository).save(goal);
     }
 }

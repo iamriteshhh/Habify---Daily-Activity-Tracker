@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>404 — Routine Not Found | Habify</title>
+  <meta name="description" content="The page you requested could not be found on Habify. Return to your daily activity matrix.">
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    .not-found-container {
+      max-width: 620px;
+      margin: 80px auto;
+      padding: 0 20px;
+      text-align: center;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+    .not-found-glow {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 110px;
+      height: 110px;
+      background: rgba(245, 185, 66, 0.1);
+      border: 1px solid rgba(245, 185, 66, 0.3);
+      border-radius: 50%;
+      font-size: 3.2rem;
+      margin-bottom: 28px;
+      box-shadow: 0 0 35px rgba(245, 185, 66, 0.15);
+      animation: pulseGlow 3s ease-in-out infinite alternate;
+    }
+    @keyframes pulseGlow {
+      from { box-shadow: 0 0 20px rgba(245, 185, 66, 0.1); transform: scale(1); }
+      to { box-shadow: 0 0 45px rgba(245, 185, 66, 0.25); transform: scale(1.04); }
+    }
+    .error-code {
+      font-size: 4.5rem;
+      font-weight: 800;
+      color: #FFFFFF;
+      letter-spacing: -0.04em;
+      line-height: 1;
+      margin-bottom: 12px;
+    }
+    .error-code span {
+      color: var(--primary, #F5B942);
+    }
+    .error-title {
+      font-size: 1.45rem;
+      font-weight: 700;
+      color: #FFFFFF;
+      margin-bottom: 12px;
+    }
+    .error-desc {
+      font-size: 0.95rem;
+      color: var(--text-secondary, #94A3B8);
+      line-height: 1.6;
+      max-width: 480px;
+      margin: 0 auto 32px;
+    }
+    .error-actions {
+      display: flex;
+      gap: 14px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .site-footer {
+      background: #121212;
+      border-top: 1px solid var(--border-default, #333333);
+      padding: 30px 20px;
+      margin-top: auto;
+    }
+  </style>
+</head>
+<body style="background-color: var(--bg-canvas, #0F0F0F); color: var(--text-primary, #FFFFFF); min-height: 100vh; display: flex; flex-direction: column;">
+
+  <!-- Navigation Header -->
+  <header class="site-navbar">
+    <div class="container nav-flex">
+      <a href="/index.html" class="brand-link">
+        <div class="brand-flame">⚡</div>
+        <span>Habify</span>
+        <span class="brand-tagline">Tracker</span>
+      </a>
+
+      <div style="display: flex; gap: 10px; align-items: center;">
+        <a href="/index.html" class="btn btn-secondary btn-sm">Weekly Tracker</a>
+        <a href="/auth.html#login" class="btn btn-primary btn-sm">Sign In</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- 404 Hero Content -->
+  <main class="not-found-container">
+    <div class="not-found-glow">⚡</div>
+    <div class="error-code">4<span>0</span>4</div>
+    <h1 class="error-title">Routine Not Found</h1>
+    <p class="error-desc">
+      The page, habit link, or resource you are trying to reach doesn't exist, has been moved, or requires authentication.
+    </p>
+
+    <div class="error-actions">
+      <a href="/index.html" class="btn btn-primary" style="padding: 12px 24px; font-weight: 600;">
+        ← Back to Weekly Tracker
+      </a>
+      <a href="/auth.html#login" class="btn btn-secondary" style="padding: 12px 24px;">
+        Sign In to Workspace
+      </a>
+    </div>
+  </main>
+
+  <!-- Site Footer -->
+  <footer class="site-footer">
+    <div class="container" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span style="color: var(--primary, #F5B942); font-weight: 700;">⚡ Habify</span>
+        <span style="color: var(--text-muted, #64748B); font-size: 0.85rem;">© 2026 Habify. Built for personal discipline and privacy.</span>
+      </div>
+      <div style="display: flex; gap: 18px; align-items: center;">
+        <a href="/index.html" style="color: var(--text-secondary, #94A3B8); text-decoration: none; font-size: 0.88rem;">Tracker</a>
+        <a href="/privacy.html" style="color: var(--text-secondary, #94A3B8); text-decoration: none; font-size: 0.88rem;">Privacy Policy</a>
+        <a href="/terms.html" style="color: var(--text-secondary, #94A3B8); text-decoration: none; font-size: 0.88rem;">Terms of Service</a>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>

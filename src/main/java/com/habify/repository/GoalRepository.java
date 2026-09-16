@@ -14,5 +14,7 @@ public interface GoalRepository extends JpaRepository<Goal, Long> {
 
     Optional<Goal> findByIdAndUserId(Long id, Long userId);
 
+    List<Goal> findByUserIdAndStatus(Long userId, com.habify.entity.GoalStatus status);
+
     long countByUserId(Long userId);
 }

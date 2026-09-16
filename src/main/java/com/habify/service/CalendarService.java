@@ -61,7 +61,8 @@ public class CalendarService {
 
             int scheduledCount = 0;
             for (Habit h : activeHabits) {
-                if (h.isScheduledFor(date)) {
+                LocalDate habitCreated = h.getCreatedAt() != null ? h.getCreatedAt().toLocalDate() : date;
+                if (!date.isBefore(habitCreated) && h.isScheduledFor(date)) {
                     scheduledCount++;
                 }
             }

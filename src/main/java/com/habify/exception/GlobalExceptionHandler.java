@@ -75,12 +75,38 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 
+    @ExceptionHandler(org.springframework.web.servlet.resource.NoResourceFoundException.class)
+    public Object handleNoResourceFound(
+            org.springframework.web.servlet.resource.NoResourceFoundException ex,
+            jakarta.servlet.http.HttpServletRequest request,
+            jakarta.servlet.http.HttpServletResponse response) throws Exception {
+        String accept = request.getHeader("Accept");
+        boolean isHtmlRequest = accept != null && accept.contains("text/html");
+        boolean isApiRequest = request.getRequestURI() != null && request.getRequestURI().startsWith("/api/");
+
+        if (isHtmlRequest || !isApiRequest) {
+            response.setStatus(HttpStatus.NOT_FOUND.value());
+            request.getRequestDispatcher("/404.html").forward(request, response);
+            return null;
+        }
+
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.NOT_FOUND.value(),
+                "Not Found",
+                ex.getMessage()
+        );
+        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+    }
+
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGenericException(Exception ex) {
+        log.error("Unhandled server exception:", ex);
         ErrorResponse response = new ErrorResponse(
                 HttpStatus.INTERNAL_SERVER_ERROR.value(),
                 "Internal Server Error",
-                ex.getMessage() != null ? ex.getMessage() : "An unexpected error occurred"
+                "An unexpected internal error occurred. Please try again later."
         );
         return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
     }

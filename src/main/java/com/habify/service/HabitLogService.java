@@ -3,12 +3,16 @@ package com.habify.service;
 import com.habify.dto.HabitLogRequest;
 import com.habify.dto.HabitLogResponse;
 import com.habify.dto.TodayHabitDTO;
+import com.habify.entity.Goal;
+import com.habify.entity.GoalStatus;
 import com.habify.entity.Habit;
 import com.habify.entity.HabitLog;
 import com.habify.entity.HabitStatus;
 import com.habify.exception.BadRequestException;
+import com.habify.repository.GoalRepository;
 import com.habify.repository.HabitLogRepository;
 import com.habify.repository.HabitRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,14 +36,27 @@ public class HabitLogService {
     private final HabitService habitService;
     private final StreakService streakService;
 
+    @Autowired(required = false)
+    private GoalRepository goalRepository;
+
     public HabitLogService(HabitLogRepository habitLogRepository,
                            HabitRepository habitRepository,
                            HabitService habitService,
                            StreakService streakService) {
+        this(habitLogRepository, habitRepository, habitService, streakService, null);
+    }
+
+    @Autowired
+    public HabitLogService(HabitLogRepository habitLogRepository,
+                           HabitRepository habitRepository,
+                           HabitService habitService,
+                           StreakService streakService,
+                           @Autowired(required = false) GoalRepository goalRepository) {
         this.habitLogRepository = habitLogRepository;
         this.habitRepository = habitRepository;
         this.habitService = habitService;
         this.streakService = streakService;
+        this.goalRepository = goalRepository;
     }
 
     /**
@@ -133,8 +150,33 @@ public class HabitLogService {
             log.setNote(request.getNote() != null ? request.getNote().trim() : null);
         }
 
+        boolean newlyCompleted = (status == HabitStatus.COMPLETED) && (existingOpt.isEmpty() || existingOpt.get().getStatus() != HabitStatus.COMPLETED);
+
         HabitLog savedLog = habitLogRepository.save(log);
+
+        if (newlyCompleted && goalRepository != null) {
+            updateLinkedGoalsOnCompletion(userId);
+        }
+
         return mapEntityToResponse(savedLog);
+    }
+
+    private void updateLinkedGoalsOnCompletion(Long userId) {
+        try {
+            List<Goal> activeGoals = goalRepository.findByUserIdAndStatus(userId, GoalStatus.ACTIVE);
+            for (Goal g : activeGoals) {
+                if ("HABIT_LOGS".equalsIgnoreCase(g.getTargetType()) || g.getTargetType() == null) {
+                    int nextVal = (g.getCurrentValue() != null ? g.getCurrentValue() : 0) + 1;
+                    g.setCurrentValue(nextVal);
+                    if (g.getTargetValue() != null && nextVal >= g.getTargetValue()) {
+                        g.setStatus(GoalStatus.COMPLETED);
+                    }
+                    goalRepository.save(g);
+                }
+            }
+        } catch (Exception ignored) {
+            // Non-blocking goal update
+        }
     }
 
     /**

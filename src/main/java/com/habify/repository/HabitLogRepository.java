@@ -48,4 +48,8 @@ public interface HabitLogRepository extends JpaRepository<HabitLog, Long> {
 
     @Query("SELECT COUNT(l) FROM HabitLog l WHERE l.habit.user.id = :userId AND l.status = :status")
     long countByUserIdAndStatus(@Param("userId") Long userId, @Param("status") HabitStatus status);
+
+    @org.springframework.data.jpa.repository.Modifying
+    @Query("DELETE FROM HabitLog l WHERE l.habit.id = :habitId")
+    void deleteByHabitId(@Param("habitId") Long habitId);
 }

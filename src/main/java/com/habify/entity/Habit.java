@@ -67,6 +67,9 @@ public class Habit {
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @OneToMany(mappedBy = "habit", cascade = CascadeType.ALL, orphanRemoval = true)
+    private java.util.List<HabitLog> logs = new java.util.ArrayList<>();
+
     public Habit() {
     }
 
@@ -215,5 +218,13 @@ public class Habit {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public java.util.List<HabitLog> getLogs() {
+        return logs;
+    }
+
+    public void setLogs(java.util.List<HabitLog> logs) {
+        this.logs = logs;
     }
 }

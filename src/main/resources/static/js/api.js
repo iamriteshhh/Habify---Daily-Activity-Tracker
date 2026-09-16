@@ -6,6 +6,8 @@ const API = (() => {
   const GUEST_HABITS_KEY = 'habify_guest_habits';
   const GUEST_LOGS_KEY = 'habify_guest_logs';
 
+  const thirtyDaysAgoStr = new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0];
+
   // Starter demo habits for instant frictionless guest onboarding
   const DEFAULT_STARTER_HABITS = [
     {
@@ -20,7 +22,7 @@ const API = (() => {
       unit: 'hours',
       preferredTime: 'AFTERNOON',
       isActive: true,
-      createdAt: '2026-08-01'
+      createdAt: thirtyDaysAgoStr
     },
     {
       id: 102,
@@ -34,7 +36,7 @@ const API = (() => {
       unit: 'mins',
       preferredTime: 'EVENING',
       isActive: true,
-      createdAt: '2026-08-01'
+      createdAt: thirtyDaysAgoStr
     },
     {
       id: 103,
@@ -48,7 +50,7 @@ const API = (() => {
       unit: 'mins',
       preferredTime: 'MORNING',
       isActive: true,
-      createdAt: '2026-08-01'
+      createdAt: thirtyDaysAgoStr
     },
     {
       id: 104,
@@ -62,7 +64,7 @@ const API = (() => {
       unit: 'session',
       preferredTime: 'MORNING',
       isActive: true,
-      createdAt: '2026-08-01'
+      createdAt: thirtyDaysAgoStr
     },
     {
       id: 105,
@@ -76,7 +78,7 @@ const API = (() => {
       unit: 'pages',
       preferredTime: 'EVENING',
       isActive: true,
-      createdAt: '2026-08-01'
+      createdAt: thirtyDaysAgoStr
     }
   ];
 
@@ -122,11 +124,8 @@ const API = (() => {
       ...(options.headers || {})
     };
 
-    if (user && user.userId) {
-      headers['X-User-Id'] = user.userId.toString();
-      if (user.token) {
-        headers['Authorization'] = `Bearer ${user.token}`;
-      }
+    if (user && user.token) {
+      headers['Authorization'] = `Bearer ${user.token}`;
     }
 
     const config = {
@@ -172,7 +171,19 @@ const API = (() => {
     if (type === 'error') icon = '×';
     if (type === 'info') icon = 'ℹ️';
 
-    toast.innerHTML = `<span style="font-weight:800; font-size:1.1rem; color:var(--yellow-accent);">${icon}</span> <span>${message}</span>`;
+    // Safely assemble toast elements without innerHTML XSS injection
+    const iconSpan = document.createElement('span');
+    iconSpan.style.fontWeight = '800';
+    iconSpan.style.fontSize = '1.1rem';
+    iconSpan.style.color = 'var(--yellow-accent)';
+    iconSpan.textContent = icon;
+
+    const textSpan = document.createElement('span');
+    textSpan.textContent = message || '';
+
+    toast.appendChild(iconSpan);
+    toast.appendChild(document.createTextNode(' '));
+    toast.appendChild(textSpan);
     container.appendChild(toast);
 
     setTimeout(() => {
@@ -312,6 +323,16 @@ const API = (() => {
 
       guestStorage.saveLogs(logs);
       return logs[key] || null;
+    },
+
+    saveLog(habitId, dateStrOrLogData, maybeLogData) {
+      let logData = {};
+      if (typeof dateStrOrLogData === 'string') {
+        logData = { ...(maybeLogData || {}), logDate: dateStrOrLogData };
+      } else if (dateStrOrLogData && typeof dateStrOrLogData === 'object') {
+        logData = { ...dateStrOrLogData };
+      }
+      return guestStorage.logHabit(habitId, logData);
     }
   };
 
@@ -346,7 +367,9 @@ const API = (() => {
           method: 'POST',
           body: JSON.stringify({ token, newPassword })
         }),
-      getProfile: () => request('/auth/profile')
+      getProfile: () => request('/auth/profile'),
+      logout: () => request('/auth/logout', { method: 'POST' }).catch(() => {}),
+      resendVerification: () => request('/auth/resend-verification', { method: 'POST' })
     },
 
     habits: {

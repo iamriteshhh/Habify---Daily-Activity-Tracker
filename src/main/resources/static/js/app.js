@@ -1047,15 +1047,43 @@ const App = (() => {
     }
   }
 
-  function downloadReportCsv() {
+  async function downloadReportCsv() {
     if (!API.isAuthenticated()) {
       openAuthGateModal('reports');
       return;
     }
-    const token = (API.getStoredUser() || {}).token;
-    // Download via fetch or redirect
-    const url = API.reports.getCsvUrl('WEEKLY');
-    window.location.href = url;
+    const user = API.getStoredUser();
+    if (!user || !user.token) {
+      API.showToast('Please log in to export CSV reports.', 'error');
+      return;
+    }
+
+    try {
+      API.showToast('Generating CSV export...', 'info');
+      const response = await fetch('/api/reports/csv?type=WEEKLY', {
+        headers: {
+          'Authorization': `Bearer ${user.token}`
+        }
+      });
+
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.message || 'Failed to export CSV report');
+      }
+
+      const blob = await response.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = downloadUrl;
+      a.download = `Habify_Weekly_Report_${new Date().toISOString().slice(0, 10)}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(downloadUrl);
+      API.showToast('CSV report downloaded successfully!', 'success');
+    } catch (err) {
+      API.showToast(err.message, 'error');
+    }
   }
 
   function printReport() {
@@ -1223,7 +1251,12 @@ const App = (() => {
     document.getElementById('auth-gate-modal').style.display = 'none';
   }
 
-  function logout() {
+  async function logout() {
+    try {
+      await API.auth.logout();
+    } catch (e) {
+      console.warn('Logout request failed:', e);
+    }
     API.clearSession();
     API.showToast('Logged out.', 'info');
     setTimeout(() => window.location.reload(), 300);

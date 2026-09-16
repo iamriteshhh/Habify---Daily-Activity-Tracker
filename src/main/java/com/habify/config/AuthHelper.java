@@ -43,4 +43,11 @@ public class AuthHelper {
 
         throw new UnauthorizedException("Authentication required. Please log in.");
     }
+
+    public void requireEmailVerified() {
+        UserPrincipal principal = getAuthenticatedPrincipal();
+        if (!principal.isEmailVerified()) {
+            throw new UnauthorizedException("Email verification required. Please verify your email to access this resource.");
+        }
+    }
 }
