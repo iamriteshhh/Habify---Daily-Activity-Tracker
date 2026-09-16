@@ -166,17 +166,24 @@ const API = (() => {
     const toast = document.createElement('div');
     toast.className = `toast-msg toast-${type}`;
     
-    let icon = '⚡';
-    if (type === 'success') icon = '✓';
-    if (type === 'error') icon = '×';
-    if (type === 'info') icon = 'ℹ️';
+    let iconSvg = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>';
+    let iconColor = 'var(--primary, #F5B942)';
+    if (type === 'success') {
+      iconSvg = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+      iconColor = '#16a34a';
+    } else if (type === 'error') {
+      iconSvg = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>';
+      iconColor = '#ef4444';
+    } else if (type === 'info') {
+      iconSvg = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>';
+      iconColor = '#3b82f6';
+    }
 
-    // Safely assemble toast elements without innerHTML XSS injection
     const iconSpan = document.createElement('span');
-    iconSpan.style.fontWeight = '800';
-    iconSpan.style.fontSize = '1.1rem';
-    iconSpan.style.color = 'var(--yellow-accent)';
-    iconSpan.textContent = icon;
+    iconSpan.style.display = 'inline-flex';
+    iconSpan.style.alignItems = 'center';
+    iconSpan.style.color = iconColor;
+    iconSpan.innerHTML = iconSvg;
 
     const textSpan = document.createElement('span');
     textSpan.textContent = message || '';

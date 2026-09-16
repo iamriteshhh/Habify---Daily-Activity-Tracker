@@ -40,7 +40,7 @@ public class ScoringService {
      */
     public int calculateDisciplineScore(Long userId, List<Habit> activeHabits) {
         if (activeHabits.isEmpty()) {
-            return 100;
+            return 0;
         }
 
         LocalDate today = LocalDate.now();
@@ -89,7 +89,7 @@ public class ScoringService {
         }
 
         if (totalScheduledInstances == 0) {
-            return 100;
+            return 0;
         }
 
         double score = (double) totalPercentageEarned / totalScheduledInstances;

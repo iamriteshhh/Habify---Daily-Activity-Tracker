@@ -170,9 +170,11 @@ const App = (() => {
     if (dashSummary) {
       document.getElementById('kpi-today-pct').textContent = `${dashSummary.todayCompletionPercentage}%`;
       document.getElementById('kpi-today-fill').style.width = `${dashSummary.todayCompletionPercentage}%`;
-      document.getElementById('kpi-streak-val').textContent = `🔥 ${dashSummary.bestCurrentStreak || 0} Days`;
+      document.getElementById('kpi-streak-val').textContent = `${dashSummary.bestCurrentStreak || 0} Days`;
       document.getElementById('kpi-tasks-done').textContent = `${dashSummary.completedTodayCount} / ${dashSummary.scheduledTodayCount}`;
-      document.getElementById('kpi-discipline-score').textContent = `${dashSummary.disciplineScore} / 100`;
+      document.getElementById('kpi-discipline-score').textContent = (!habits || habits.length === 0)
+        ? '-- / 100'
+        : `${dashSummary.disciplineScore} / 100`;
     } else {
       renderGuestKPIs();
     }
@@ -207,24 +209,60 @@ const App = (() => {
     const todayPct = scheduledCount > 0 ? Math.min(100, Math.round(earnedPct / scheduledCount)) : 0;
     document.getElementById('kpi-today-pct').textContent = `${todayPct}%`;
     document.getElementById('kpi-today-fill').style.width = `${todayPct}%`;
-    document.getElementById('kpi-streak-val').textContent = `🔥 0 Days`;
+    document.getElementById('kpi-streak-val').textContent = `0 Days`;
     document.getElementById('kpi-tasks-done').textContent = `${completedCount} / ${scheduledCount}`;
-    document.getElementById('kpi-discipline-score').textContent = `-- / 100`;
+    document.getElementById('kpi-discipline-score').textContent = habits.length > 0 ? `${todayPct} / 100` : `-- / 100`;
   }
 
   /* ==========================================================================
      Signature Weekly Matrix Table Rendering
      ========================================================================== */
   function renderTrackerTable() {
+    const tableContainerEl = document.getElementById('tracker-table-container');
+    const emptyContainerEl = document.getElementById('tracker-empty-container');
     const theadEl = document.getElementById('tracker-thead');
     const tbodyEl = document.getElementById('tracker-tbody');
     const tfootEl = document.getElementById('tracker-tfoot');
-    if (!theadEl || !tbodyEl) return;
+    if (!tbodyEl) return;
 
+    renderCategoryFilterShelf();
+
+    // 1. Handle complete zero-habit onboarding state
+    if (!habits || habits.length === 0) {
+      if (tableContainerEl) tableContainerEl.style.display = 'none';
+      if (emptyContainerEl) {
+        emptyContainerEl.style.display = 'flex';
+        emptyContainerEl.innerHTML = `
+          <div class="onboarding-icon-ring">
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+            </svg>
+          </div>
+          <h3 class="onboarding-title">Build Your Consistency Matrix</h3>
+          <p class="onboarding-desc">Track personal daily habits, mark completions, monitor weekly streaks, and build lasting momentum.</p>
+          <div class="onboarding-actions">
+            <button class="btn btn-primary" onclick="App.openAddHabitModal()">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Create Your First Routine
+            </button>
+            <button class="btn btn-secondary" onclick="App.seedStarterHabits()">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+              Quick Start with 5 Starter Habits
+            </button>
+          </div>
+        `;
+      }
+      return;
+    }
+
+    // Habits exist, show table container and hide empty container
+    if (tableContainerEl) tableContainerEl.style.display = 'block';
+    if (emptyContainerEl) emptyContainerEl.style.display = 'none';
+
+    // 1. Build Header
     const todayStr = formatDate(new Date());
     const dayShortNames = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
 
-    // 1. Build Header
     let headerHtml = `
       <tr>
         <th class="th-task-col">TASKS</th>
@@ -235,7 +273,7 @@ const App = (() => {
       const dateStr = formatDate(dateObj);
       const isToday = dateStr === todayStr;
       const dayNum = dateObj.getDate();
-      const monthShort = dateObj.toLocaleDateString('en-US', { month: 'short' });
+      const monthShort = dateObj.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
 
       headerHtml += `
         <th class="th-day-col ${isToday ? 'is-today' : ''}" title="${dateObj.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}">
@@ -262,11 +300,11 @@ const App = (() => {
     if (filteredHabits.length === 0) {
       tbodyEl.innerHTML = `
         <tr>
-          <td colspan="10" style="padding: 48px 20px; text-align: center;">
-            <div style="font-size: 2.2rem; margin-bottom: 12px;">🎯</div>
-            <h3 style="color:#ffffff; font-size:1.15rem; font-weight:600; margin-bottom: 6px;">No habits configured</h3>
-            <p style="font-size:0.88rem; color:var(--text-secondary, #94a3b8); margin-bottom: 18px;">Create a habit routine to begin building your consistency matrix!</p>
-            <button class="btn btn-primary btn-sm" onclick="App.openAddHabitModal()">+ Add New Habit</button>
+          <td colspan="10" class="filter-empty-cell">
+            <div class="filter-empty-box">
+              <span style="font-size: 0.9rem; color: var(--text-secondary);">No habits configured under <strong>"${escapeHtml(currentCategoryFilter)}"</strong>.</span>
+              <button class="btn btn-ghost btn-sm" onclick="App.filterByCategory('ALL')" style="margin-left: 12px; color: var(--primary);">Clear Filter</button>
+            </div>
           </td>
         </tr>
       `;
@@ -411,7 +449,7 @@ const App = (() => {
       <tr class="tfoot-report-row">
         <td class="tf-report-label">
           <div style="display:flex; align-items:center; gap:8px;">
-            <span>📊</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
             <span>DAILY REPORT</span>
           </div>
         </td>
@@ -697,14 +735,19 @@ const App = (() => {
         } else {
           insightsListEl.innerHTML = summary.insights.map(i => {
             let borderColor = 'var(--primary, #F5B942)';
-            let icon = '💡';
-            if (i.type === 'SUCCESS') { borderColor = '#16a34a'; icon = '✓'; }
-            else if (i.type === 'WARNING') { borderColor = '#dc2626'; icon = '⚠️'; }
+            let icon = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--primary, #F5B942)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>';
+            if (i.type === 'SUCCESS') {
+              borderColor = '#16a34a';
+              icon = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+            } else if (i.type === 'WARNING') {
+              borderColor = '#dc2626';
+              icon = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
+            }
 
             return `
               <div style="background: var(--bg-card, #1F1F1F); border-left: 3px solid ${borderColor}; padding: 14px; border-radius: 6px;">
                 <div style="display:flex; align-items:center; gap:8px; margin-bottom: 4px;">
-                  <span>${icon}</span>
+                  <span style="display:inline-flex; align-items:center;">${icon}</span>
                   <strong style="color: #ffffff; font-size: 0.92rem;">${escapeHtml(i.title)}</strong>
                 </div>
                 <p style="font-size: 0.85rem; color: var(--text-secondary, #94a3b8); margin: 0; line-height: 1.4;">${escapeHtml(i.message)}</p>
@@ -731,7 +774,11 @@ const App = (() => {
       if (!goals || goals.length === 0) {
         gridEl.innerHTML = `
           <div style="grid-column: 1 / -1; text-align: center; padding: 48px; background: var(--bg-card, #1F1F1F); border-radius: 8px; border: 1px solid var(--border-subtle, #262626);">
-            <div style="font-size: 2rem; margin-bottom: 8px;">🎯</div>
+            <div style="width: 48px; height: 48px; border-radius: 50%; background: rgba(245, 185, 66, 0.1); border: 1px solid rgba(245, 185, 66, 0.25); display: inline-flex; align-items: center; justify-content: center; margin-bottom: 12px;">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--primary, #F5B942)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>
+              </svg>
+            </div>
             <h3 style="color:#ffffff; font-size: 1.1rem; margin-bottom: 4px;">No goals created yet</h3>
             <p style="font-size: 0.88rem; color: var(--text-secondary, #94a3b8); margin-bottom: 16px;">Create a milestone goal (e.g. Complete 20 workout sessions) to track accountability!</p>
             <button class="btn btn-primary btn-sm" onclick="App.openAddGoalModal()">+ Create First Goal</button>
@@ -847,9 +894,10 @@ const App = (() => {
       const achievements = await API.achievements.getAll();
       gridEl.innerHTML = achievements.map(a => {
         const unlocked = a.isUnlocked;
+        const iconSvg = getAchievementSvg(a.id, unlocked);
         return `
-          <div class="content-panel" style="padding: 20px; text-align: center; border: 1px solid ${unlocked ? 'var(--primary, #F5B942)' : 'var(--border-subtle, #262626)'}; opacity: ${unlocked ? '1' : '0.65'};">
-            <div style="font-size: 2.2rem; margin-bottom: 8px;">${a.icon}</div>
+          <div class="content-panel" style="padding: 20px; text-align: center; border: 1px solid ${unlocked ? 'rgba(245, 185, 66, 0.4)' : 'var(--border-subtle, #262626)'}; opacity: ${unlocked ? '1' : '0.65'};">
+            <div>${iconSvg}</div>
             <h4 style="font-size: 1.05rem; font-weight: 600; color: ${unlocked ? '#ffffff' : 'var(--text-secondary, #94a3b8)'}; margin-bottom: 4px;">${escapeHtml(a.title)}</h4>
             <p style="font-size: 0.82rem; color: var(--text-secondary, #94a3b8); margin-bottom: 14px; min-height: 36px;">${escapeHtml(a.description)}</p>
             
@@ -858,7 +906,7 @@ const App = (() => {
             </div>
 
             <div style="font-size: 0.78rem; color: var(--text-muted, #64748b);">
-              ${unlocked ? '<strong style="color:#16a34a;">✓ UNLOCKED</strong>' : `${a.currentProgress} / ${a.targetProgress}`}
+              ${unlocked ? '<strong style="color:#16a34a; display:inline-flex; align-items:center; gap:4px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> UNLOCKED</strong>' : `${a.currentProgress} / ${a.targetProgress}`}
             </div>
           </div>
         `;
@@ -1034,7 +1082,7 @@ const App = (() => {
                   <td style="padding: 10px 12px; text-align:center;">${h.scheduledCount}</td>
                   <td style="padding: 10px 12px; text-align:center; color:#16a34a;">${h.completedCount}</td>
                   <td style="padding: 10px 12px; text-align:center; font-weight:700; color:var(--primary, #F5B942);">${h.completionPercentage}%</td>
-                  <td style="padding: 10px 12px; text-align:center;">🔥 ${h.currentStreak}</td>
+                  <td style="padding: 10px 12px; text-align:center;"><span style="display:inline-flex; align-items:center; justify-content:center; gap:4px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--primary, #F5B942)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>${h.currentStreak}</span></td>
                 </tr>
               `).join('')}
             </tbody>
@@ -1224,6 +1272,39 @@ const App = (() => {
   /* ==========================================================================
      Filters, Auth Gates, and Helpers
      ========================================================================== */
+  function renderCategoryFilterShelf() {
+    const shelf = document.getElementById('category-filter-shelf');
+    if (!shelf) return;
+
+    const categorySet = new Set();
+    categorySet.add('ALL');
+
+    if (habits && habits.length > 0) {
+      habits.forEach(h => {
+        if (h.category && h.category.trim()) {
+          categorySet.add(h.category.trim());
+        }
+      });
+    } else {
+      categorySet.add('Coding');
+      categorySet.add('Study');
+      categorySet.add('Fitness');
+      categorySet.add('Health');
+      categorySet.add('Reading');
+    }
+
+    const categories = Array.from(categorySet);
+    if (!categories.some(c => c.toLowerCase() === currentCategoryFilter.toLowerCase())) {
+      currentCategoryFilter = 'ALL';
+    }
+
+    shelf.innerHTML = categories.map(cat => {
+      const isActive = cat.toLowerCase() === currentCategoryFilter.toLowerCase();
+      const label = cat === 'ALL' ? 'All Habits' : escapeHtml(cat);
+      return `<button class="filter-pill ${isActive ? 'active' : ''}" data-cat="${escapeHtml(cat)}" onclick="App.filterByCategory('${escapeHtml(cat)}')">${label}</button>`;
+    }).join('');
+  }
+
   function filterByCategory(category) {
     currentCategoryFilter = category;
     const pills = document.querySelectorAll('.filter-pill');
@@ -1236,6 +1317,33 @@ const App = (() => {
 
   function filterHabits(cat) {
     filterByCategory(cat);
+  }
+
+  async function seedStarterHabits() {
+    const starters = [
+      { title: 'Core Java Practice', category: 'Coding', priority: 'HIGH', targetValue: 1, unit: 'sessions', frequencyType: 'DAILY', preferredTime: 'MORNING' },
+      { title: 'Gym & Strength Workout', category: 'Fitness', priority: 'HIGH', targetValue: 1, unit: 'workout', frequencyType: 'SPECIFIC_DAYS', scheduledDays: 'MONDAY,TUESDAY,WEDNESDAY,THURSDAY,FRIDAY', preferredTime: 'EVENING' },
+      { title: 'Yoga & Mindful Breathing', category: 'Health', priority: 'MEDIUM', targetValue: 20, unit: 'mins', frequencyType: 'DAILY', preferredTime: 'MORNING' },
+      { title: 'DSA Problem Solving', category: 'Study', priority: 'HIGH', targetValue: 2, unit: 'problems', frequencyType: 'DAILY', preferredTime: 'NIGHT' },
+      { title: 'Read Technical Books', category: 'Reading', priority: 'LOW', targetValue: 15, unit: 'pages', frequencyType: 'DAILY', preferredTime: 'NIGHT' }
+    ];
+
+    const isAuth = API.isAuthenticated();
+    try {
+      if (isAuth) {
+        for (const item of starters) {
+          await API.habits.create(item);
+        }
+      } else {
+        for (const item of starters) {
+          API.guestStorage.createHabit(item);
+        }
+      }
+      API.showToast('5 starter habits loaded! Build your streak.', 'success');
+      await loadTrackerData();
+    } catch (err) {
+      API.showToast('Failed to seed habits: ' + err.message, 'error');
+    }
   }
 
   function refreshDashboard() {
@@ -1283,15 +1391,67 @@ const App = (() => {
   }
 
   function getCategorySvg(cat) {
-    if (!cat) return '⚡';
+    if (!cat) {
+      return '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>';
+    }
     const c = cat.toLowerCase();
-    if (c.includes('study')) return '📚';
-    if (c.includes('code') || c.includes('coding') || c.includes('java')) return '💻';
-    if (c.includes('fit') || c.includes('gym') || c.includes('exercise')) return '🏋️';
-    if (c.includes('yoga') || c.includes('health') || c.includes('diet')) return '🥗';
-    if (c.includes('read') || c.includes('book')) return '📖';
-    if (c.includes('finance') || c.includes('money')) return '💰';
-    return '⚡';
+    if (c.includes('code') || c.includes('coding') || c.includes('java') || c.includes('dsa') || c.includes('dev')) {
+      return '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>';
+    }
+    if (c.includes('study') || c.includes('learn') || c.includes('course')) {
+      return '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>';
+    }
+    if (c.includes('fit') || c.includes('gym') || c.includes('exercise') || c.includes('workout')) {
+      return '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 5v14M18 5v14M2 9v6M22 9v6M6 12h12"/></svg>';
+    }
+    if (c.includes('yoga') || c.includes('health') || c.includes('diet') || c.includes('meditat')) {
+      return '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>';
+    }
+    if (c.includes('read') || c.includes('book')) {
+      return '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-0-5H20"/></svg>';
+    }
+    if (c.includes('finance') || c.includes('money')) {
+      return '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>';
+    }
+    return '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>';
+  }
+
+  function getAchievementSvg(id, unlocked) {
+    const strokeColor = unlocked ? 'var(--primary, #F5B942)' : '#64748b';
+    const bgFill = unlocked ? 'rgba(245, 185, 66, 0.12)' : 'rgba(255, 255, 255, 0.04)';
+    const glowStyle = unlocked ? 'box-shadow: 0 0 16px rgba(245, 185, 66, 0.25); border: 1px solid rgba(245, 185, 66, 0.4);' : 'border: 1px solid rgba(255, 255, 255, 0.08);';
+
+    let path = '';
+    switch (id) {
+      case 'first_step':
+        path = '<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/>';
+        break;
+      case 'week_warrior':
+        path = '<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>';
+        break;
+      case 'routine_builder':
+        path = '<polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>';
+        break;
+      case 'century_club':
+        path = '<circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/>';
+        break;
+      case 'discipline_elite':
+        path = '<path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.45 1-1 1H8c-.55 0-1 .45-1 1v1c0 .55.45 1 1 1h8c.55 0 1-.45 1-1v-1c0-.55-.45-1-1-1h-1c-.55 0-1-.45-1-1v-2.34"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/>';
+        break;
+      case 'goal_getter':
+        path = '<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>';
+        break;
+      default:
+        path = '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>';
+    }
+
+    return `
+      <div style="width: 52px; height: 52px; border-radius: 50%; background: ${bgFill}; ${glowStyle} display: inline-flex; align-items: center; justify-content: center; margin-bottom: 12px;">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="${strokeColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          ${path}
+        </svg>
+      </div>
+    `;
   }
 
   function escapeHtml(str) {
@@ -1322,6 +1482,8 @@ const App = (() => {
     deleteCurrentHabit,
     filterByCategory,
     filterHabits,
+    seedStarterHabits,
+    renderCategoryFilterShelf,
     refreshDashboard,
     openAuthGateModal,
     closeAuthGateModal,

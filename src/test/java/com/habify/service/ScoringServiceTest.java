@@ -39,10 +39,10 @@ class ScoringServiceTest {
     }
 
     @Test
-    @DisplayName("Discipline Score: Returns 100% when no active habits exist")
+    @DisplayName("Discipline Score: Returns 0% when no active habits exist")
     void testDisciplineScoreNoHabits() {
         int score = scoringService.calculateDisciplineScore(1L, Collections.emptyList());
-        assertEquals(100, score);
+        assertEquals(0, score);
     }
 
     @Test
